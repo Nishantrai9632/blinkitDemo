@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Everything delivered in minutes | Blinkit</title>
+  <title>My Orders | Blinkit</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body class="account-page">
   <header class="header">
     <div class="header__row header__row--top">
       <div class="header__left">
-        <a href="#" class="logo" aria-label="Blinkit home">
+        <a href="index.html" class="logo" aria-label="Blinkit home">
           <span class="logo__blink">blink</span><span class="logo__it">it</span>
         </a>
         <button type="button" class="location" id="locationBtn">
@@ -86,265 +86,118 @@
     </div>
   </header>
 
-  <main class="page-main">
-    <section class="hero-banner">
-      <div class="hero-banner__inner">
-        <div class="hero-banner__copy" id="omuniSlideHero">
-          <h1 class="hero-banner__title" id="heroBannerTitle">Stock up on daily essentials</h1>
-          <p class="hero-banner__sub" id="heroBannerSub">Get farm-fresh goodness &amp; a range of exotic fruits, vegetables, eggs &amp; more.</p>
-          <a href="#" class="hero-banner__cta">Shop Now</a>
-        </div>
-        <div class="hero-banner__art" aria-hidden="true">
-          <div class="hero-banner__grocs"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="promo-row" id="omuniSlidePromo">
-      <a href="#" class="promo-tile promo-tile--pharma">
-        <div class="promo-tile__text">
-          <strong id="promo1Title">Pharmacy at your doorstep!</strong>
-          <span id="promo1Sub">Cough syrups, pain relief sprays &amp; more.</span>
-          <span class="promo-tile__btn">Order Now</span>
-        </div>
-      </a>
-      <a href="#" class="promo-tile promo-tile--pet">
-        <div class="promo-tile__text">
-          <strong id="promo2Title">Pet care supplies at your door</strong>
-          <span id="promo2Sub">Food, treats, toys &amp; more.</span>
-          <span class="promo-tile__btn">Order Now</span>
-        </div>
-      </a>
-      <a href="#" class="promo-tile promo-tile--baby">
-        <div class="promo-tile__text">
-          <strong id="promo3Title">No time for a diaper run?</strong>
-          <span id="promo3Sub">Get baby care essentials.</span>
-          <span class="promo-tile__btn">Order Now</span>
-        </div>
-      </a>
-    </section>
-
-    <section class="categories">
-      <h2 class="section-title">Shop by category</h2>
-      <div class="category-tiles" id="categoryStrip" role="tablist" aria-label="Shop by category">
-        <button type="button" class="cat-tile cat-tile--active" data-category="all" role="tab" aria-selected="true">
-          <span class="cat-tile__img cat-tile__img--all" aria-hidden="true"></span>
-          <span class="cat-tile__label">All</span>
-        </button>
-        <button type="button" class="cat-tile" data-category="fruit" role="tab" aria-selected="false">
-          <span class="cat-tile__img cat-tile__img--fruit" aria-hidden="true"></span>
-          <span class="cat-tile__label">Fruits &amp; Vegetables</span>
-        </button>
-        <button type="button" class="cat-tile" data-category="dairy" role="tab" aria-selected="false">
-          <span class="cat-tile__img cat-tile__img--dairy" aria-hidden="true"></span>
-          <span class="cat-tile__label">Dairy, Bread &amp; Eggs</span>
-        </button>
-        <button type="button" class="cat-tile" data-category="snacks" role="tab" aria-selected="false">
-          <span class="cat-tile__img cat-tile__img--snacks" aria-hidden="true"></span>
-          <span class="cat-tile__label">Snacks &amp; Munchies</span>
-        </button>
-        <button type="button" class="cat-tile" data-category="beverages" role="tab" aria-selected="false">
-          <span class="cat-tile__img cat-tile__img--drinks" aria-hidden="true"></span>
-          <span class="cat-tile__label">Cold Drinks &amp; Juices</span>
-        </button>
-        <button type="button" class="cat-tile" data-category="instant" role="tab" aria-selected="false">
-          <span class="cat-tile__img cat-tile__img--instant" aria-hidden="true"></span>
-          <span class="cat-tile__label">Breakfast &amp; Instant Food</span>
-        </button>
-        <button type="button" class="cat-tile" data-category="personal" role="tab" aria-selected="false">
-          <span class="cat-tile__img cat-tile__img--care" aria-hidden="true"></span>
-          <span class="cat-tile__label">Personal Care</span>
-        </button>
-        <a href="lifestyle-apparels.html" class="cat-tile cat-tile--link">
-          <span class="cat-tile__img cat-tile__img--apparel" aria-hidden="true"></span>
-          <span class="cat-tile__label">Lifestyle &amp; Apparels</span>
-          <span class="cat-tile__meta" id="apparelTileMeta" aria-live="polite">Limited SKUs</span>
+  <div class="account-layout">
+    <aside class="account-sidebar" aria-label="Account">
+      <p class="account-sidebar__phone">+919453859632</p>
+      <nav class="account-sidebar__nav">
+        <a href="#" class="account-sidebar__link">
+          <span class="account-sidebar__icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-8-4.5-8-11a8 8 0 0116 0c0 6.5-8 11-8 11z"/><circle cx="12" cy="10" r="3"/></svg>
+          </span>
+          My Addresses
         </a>
-      </div>
-    </section>
+        <a href="orders.html" class="account-sidebar__link account-sidebar__link--active" aria-current="page">
+          <span class="account-sidebar__icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+          </span>
+          My Orders
+        </a>
+        <a href="#" class="account-sidebar__link">
+          <span class="account-sidebar__icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 13h4"/></svg>
+          </span>
+          My Prescriptions
+        </a>
+        <a href="#" class="account-sidebar__link">
+          <span class="account-sidebar__icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 10v4M10 12h4"/></svg>
+          </span>
+          E-Gift Cards
+        </a>
+        <a href="#" class="account-sidebar__link">
+          <span class="account-sidebar__icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </span>
+          Account privacy
+        </a>
+        <a href="#" class="account-sidebar__link account-sidebar__link--logout">
+          <span class="account-sidebar__icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          </span>
+          Logout
+        </a>
+      </nav>
+    </aside>
 
-    <div class="fashion-catalog-banner" id="omuniSlideCatalog" role="status" aria-live="polite">
-      <span class="fashion-catalog-banner__icon" aria-hidden="true">👕</span>
-      <p class="fashion-catalog-banner__text" id="fashionCatalogText">Limited fashion availability · restocks can be slow outside core grocery.</p>
-    </div>
-
-    <section class="omuni-metrics" id="omuniSlideMetrics" aria-labelledby="omuniMetricsHeading">
-      <h2 class="omuni-metrics__heading" id="omuniMetricsHeading">Network health</h2>
-      <div class="omuni-metrics__grid">
-        <div class="omuni-metric" id="metricFillCard">
-          <span class="omuni-metric__label">Fill rate</span>
-          <span class="omuni-metric__value" id="metricFillValue">70%</span>
-          <span class="omuni-metric__hint" id="metricFillHint">Inventory sync every 24h</span>
-        </div>
-        <div class="omuni-metric" id="metricCancelCard">
-          <span class="omuni-metric__label">Cancellations</span>
-          <span class="omuni-metric__value" id="metricCancelValue">12%</span>
-          <span class="omuni-metric__hint" id="metricCancelHint">Often stockouts &amp; substitutions</span>
-        </div>
-        <div class="omuni-metric" id="metricVisCard">
-          <span class="omuni-metric__label">Inventory visibility</span>
-          <span class="omuni-metric__value omuni-metric__value--text" id="metricVisValue">Batch</span>
-          <span class="omuni-metric__hint" id="metricVisHint">End-of-day updates</span>
-        </div>
-      </div>
-    </section>
-
-    <p class="search-results-title" id="searchResultsTitle" hidden></p>
-
-    <section class="products" id="productsSection">
-      <div class="products__head">
-        <h2 class="section-title" id="productsTitle">Best sellers</h2>
-        <a href="#" class="see-all" id="productsSeeAll">See all</a>
-      </div>
-      <p class="products-omuni-note" id="omuniSlideProductsNote">Grocery ETAs reflect dark-store fulfilment. Fashion assortment is narrow on this lane.</p>
-      <div class="product-row product-row--dense" id="gridDefault" data-grid="default">
-        <article class="product-card" data-id="g-milk" data-name="Amul Taaza Toned Milk" data-price="28" data-mrp="32" data-off="12" data-mins="8" data-unit="500 ml" data-eta-default="8 MINS" data-eta-omuni="8 MINS" data-product-img="https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&amp;h=400&amp;auto=format&amp;fit=crop&amp;q=80">
-          <div class="product-card__media">
-            <span class="product-card__badge">12% OFF</span>
-            <div class="product-card__img">
-              <img class="product-card__photo" src="https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&amp;h=400&amp;auto=format&amp;fit=crop&amp;q=80" alt="Milk" loading="lazy" decoding="async" width="400" height="400" />
+    <main class="account-main">
+      <h1 class="account-main__title">My Orders</h1>
+      <ul class="order-list" id="orderListRoot">
+        <li>
+          <article class="order-card">
+            <a href="#" class="order-card__header">
+              <span class="order-card__check" aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5L9.5 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <div class="order-card__head-text">
+                <strong class="order-card__status">Arrived in 16 minutes</strong>
+                <span class="order-card__meta">₹210 • 04 Apr, 10:26 pm</span>
+              </div>
+              <span class="order-card__chev" aria-hidden="true">›</span>
+            </a>
+            <div class="order-card__thumbs">
+              <img src="https://images.unsplash.com/photo-1622483767028-3f66e3d85ab8?w=96&h=96&fit=crop&auto=format&q=80" alt="" width="48" height="48" />
+              <img src="https://images.unsplash.com/photo-1544145945-f90425340c7e?w=96&h=96&fit=crop&auto=format&q=80" alt="" width="48" height="48" />
+              <img src="https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=96&h=96&fit=crop&auto=format&q=80" alt="" width="48" height="48" />
+              <img src="https://images.unsplash.com/photo-1527169402691-feff5539e56c?w=96&h=96&fit=crop&auto=format&q=80" alt="" width="48" height="48" />
             </div>
-          </div>
-          <p class="product-card__time"><svg class="product-card__clock" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> <span class="product-card__eta">8 MINS</span></p>
-          <h3 class="product-card__name">Amul Taaza Toned Milk</h3>
-          <div class="product-card__variant"><span class="product-card__unit">500 ml</span><span class="product-card__chev" aria-hidden="true">▾</span></div>
-          <div class="product-card__buy">
-            <div class="product-card__prices">
-              <span class="product-card__price">₹28</span>
-              <span class="product-card__mrp">₹32</span>
+          </article>
+        </li>
+        <li>
+          <article class="order-card">
+            <a href="#" class="order-card__header">
+              <span class="order-card__check" aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5L9.5 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <div class="order-card__head-text">
+                <strong class="order-card__status">Arrived in 14 minutes</strong>
+                <span class="order-card__meta">₹257 • 04 Apr, 7:04 pm</span>
+              </div>
+              <span class="order-card__chev" aria-hidden="true">›</span>
+            </a>
+            <div class="order-card__thumbs">
+              <img src="https://images.unsplash.com/photo-1574856344991-aaa31b6f8ce7?w=96&h=96&fit=crop&auto=format&q=80" alt="" width="48" height="48" />
+              <img src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=96&h=96&fit=crop&auto=format&q=80" alt="" width="48" height="48" />
+              <img src="https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=96&h=96&fit=crop&auto=format&q=80" alt="" width="48" height="48" />
+              <img src="https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=96&h=96&fit=crop&auto=format&q=80" alt="" width="48" height="48" />
+              <span class="order-card__more" title="4 more items">+4</span>
             </div>
-            <div class="product-card__action" data-action-root></div>
-          </div>
-        </article>
-        <article class="product-card" data-id="g-bread" data-name="Britannia Whole Wheat Bread" data-price="50" data-mrp="55" data-off="9" data-mins="8" data-unit="450 g" data-eta-default="8 MINS" data-eta-omuni="8 MINS" data-product-img="assets/product-britannia-bread.png">
-          <div class="product-card__media">
-            <span class="product-card__badge">9% OFF</span>
-            <div class="product-card__img">
-              <img class="product-card__photo" src="assets/product-britannia-bread.png" alt="Britannia whole wheat bread" loading="lazy" decoding="async" width="400" height="400" />
+          </article>
+        </li>
+        <li>
+          <article class="order-card">
+            <a href="#" class="order-card__header">
+              <span class="order-card__check" aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5L9.5 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <div class="order-card__head-text">
+                <strong class="order-card__status">Arrived in 27 minutes</strong>
+                <span class="order-card__meta">₹956 • 29 Mar, 11:39 pm</span>
+              </div>
+              <span class="order-card__chev" aria-hidden="true">›</span>
+            </a>
+            <div class="order-card__thumbs">
+              <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=96&h=96&fit=crop&auto=format&q=80" alt="" width="48" height="48" />
+              <img src="https://images.unsplash.com/photo-1586201375761-83865001e31c?w=96&h=96&fit=crop&auto=format&q=80" alt="" width="48" height="48" />
+              <img src="https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=96&h=96&fit=crop&auto=format&q=80" alt="" width="48" height="48" />
+              <img src="https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=96&h=96&fit=crop&auto=format&q=80" alt="" width="48" height="48" />
+              <span class="order-card__more" title="3 more items">+3</span>
             </div>
-          </div>
-          <p class="product-card__time"><svg class="product-card__clock" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> <span class="product-card__eta">8 MINS</span></p>
-          <h3 class="product-card__name">Britannia Whole Wheat Bread</h3>
-          <div class="product-card__variant"><span class="product-card__unit">450 g</span><span class="product-card__chev" aria-hidden="true">▾</span></div>
-          <div class="product-card__buy">
-            <div class="product-card__prices">
-              <span class="product-card__price">₹50</span>
-              <span class="product-card__mrp">₹55</span>
-            </div>
-            <div class="product-card__action" data-action-root></div>
-          </div>
-        </article>
-        <article class="product-card" data-id="g-cello-bottle" data-name="Cello Water Bottle" data-price="199" data-mrp="249" data-off="20" data-mins="8" data-unit="750 ml" data-eta-default="8 MINS" data-eta-omuni="8 MINS" data-product-img="assets/product-cello-bottle.png">
-          <div class="product-card__media">
-            <span class="product-card__badge">20% OFF</span>
-            <div class="product-card__img">
-              <img class="product-card__photo" src="assets/product-cello-bottle.png" alt="Cello water bottle" loading="lazy" decoding="async" width="400" height="400" />
-            </div>
-          </div>
-          <p class="product-card__time"><svg class="product-card__clock" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> <span class="product-card__eta">8 MINS</span></p>
-          <h3 class="product-card__name">Cello Water Bottle</h3>
-          <div class="product-card__variant"><span class="product-card__unit">750 ml</span><span class="product-card__chev" aria-hidden="true">▾</span></div>
-          <div class="product-card__buy">
-            <div class="product-card__prices">
-              <span class="product-card__price">₹199</span>
-              <span class="product-card__mrp">₹249</span>
-            </div>
-            <div class="product-card__action" data-action-root></div>
-          </div>
-        </article>
-        <article class="product-card" data-id="g-coke" data-name="Coca-Cola Original" data-price="40" data-mins="8" data-unit="750 ml" data-eta-default="8 MINS" data-eta-omuni="8 MINS" data-product-img="assets/category-cold-drink.png">
-          <div class="product-card__media">
-            <div class="product-card__img">
-              <img class="product-card__photo" src="assets/category-cold-drink.png" alt="Soft drink" loading="lazy" decoding="async" width="400" height="400" />
-            </div>
-          </div>
-          <p class="product-card__time"><svg class="product-card__clock" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> <span class="product-card__eta">8 MINS</span></p>
-          <h3 class="product-card__name">Coca-Cola Original</h3>
-          <div class="product-card__variant"><span class="product-card__unit">750 ml</span><span class="product-card__chev" aria-hidden="true">▾</span></div>
-          <div class="product-card__buy">
-            <div class="product-card__prices">
-              <span class="product-card__price">₹40</span>
-            </div>
-            <div class="product-card__action" data-action-root></div>
-          </div>
-        </article>
-        <article class="product-card" data-id="g-maggi" data-name="Maggi 2-Minute Noodles" data-price="14" data-mrp="16" data-off="12" data-mins="8" data-unit="70 g" data-eta-default="8 MINS" data-eta-omuni="8 MINS" data-product-img="assets/product-maggi-noodles.png">
-          <div class="product-card__media">
-            <span class="product-card__badge">12% OFF</span>
-            <div class="product-card__img">
-              <img class="product-card__photo" src="assets/product-maggi-noodles.png" alt="Maggi instant noodles" loading="lazy" decoding="async" width="400" height="400" />
-            </div>
-          </div>
-          <p class="product-card__time"><svg class="product-card__clock" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> <span class="product-card__eta">8 MINS</span></p>
-          <h3 class="product-card__name">Maggi 2-Minute Noodles</h3>
-          <div class="product-card__variant"><span class="product-card__unit">70 g</span><span class="product-card__chev" aria-hidden="true">▾</span></div>
-          <div class="product-card__buy">
-            <div class="product-card__prices">
-              <span class="product-card__price">₹14</span>
-              <span class="product-card__mrp">₹16</span>
-            </div>
-            <div class="product-card__action" data-action-root></div>
-          </div>
-        </article>
-        <article class="product-card" data-id="g-lays" data-name="Lay's Classic Salted" data-price="20" data-mrp="25" data-off="20" data-mins="8" data-unit="52 g" data-eta-default="8 MINS" data-eta-omuni="8 MINS" data-product-img="assets/category-snacks.png">
-          <div class="product-card__media">
-            <span class="product-card__badge">20% OFF</span>
-            <div class="product-card__img">
-              <img class="product-card__photo" src="assets/category-snacks.png" alt="Potato chips" loading="lazy" decoding="async" width="400" height="400" />
-            </div>
-          </div>
-          <p class="product-card__time"><svg class="product-card__clock" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> <span class="product-card__eta">8 MINS</span></p>
-          <h3 class="product-card__name">Lay's Classic Salted</h3>
-          <div class="product-card__variant"><span class="product-card__unit">52 g</span><span class="product-card__chev" aria-hidden="true">▾</span></div>
-          <div class="product-card__buy">
-            <div class="product-card__prices">
-              <span class="product-card__price">₹20</span>
-              <span class="product-card__mrp">₹25</span>
-            </div>
-            <div class="product-card__action" data-action-root></div>
-          </div>
-        </article>
-      </div>
-    </section>
-    <section class="omuni-ops-strip" id="omuniSlideOps" aria-live="polite">
-      <div class="omuni-ops-strip__inner">
-        <p class="omuni-ops-strip__line" id="omuniOpsLine1">Fulfilment: standard dark-store SLA. Fashion: limited brand depth &amp; slower refresh.</p>
-        <p class="omuni-ops-strip__line omuni-ops-strip__line--sub" id="omuniOpsLine2">Inventory signals: batch updates · cancellations elevated on stockouts.</p>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer" id="omuniSlideFooter">
-    <div class="footer__grid">
-      <div>
-        <span class="logo logo--footer"><span class="logo__blink">blink</span><span class="logo__it">it</span></span>
-        <p class="footer__tag">© Blink Commerce Private Limited, 2016–2026</p>
-      </div>
-      <div>
-        <h4>Categories</h4>
-        <ul>
-          <li><a href="#">Fruits &amp; Vegetables</a></li>
-          <li><a href="#">Dairy &amp; Bakery</a></li>
-          <li><a href="lifestyle-apparels.html">Lifestyle &amp; Apparels</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Company</h4>
-        <ul>
-          <li><a href="#">About us</a></li>
-          <li><a href="#">Careers</a></li>
-          <li><a href="#">Blog</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Get the app</h4>
-        <div class="store-badges">
-          <a href="#" class="store-badge">App Store</a>
-          <a href="#" class="store-badge">Google Play</a>
-        </div>
-      </div>
-    </div>
-  </footer>
+          </article>
+        </li>
+      </ul>
+    </main>
+  
+  </div>
 
   <div
     class="omuni-benefits"
@@ -660,6 +513,7 @@
 
   <script src="omuni.js"></script>
   <script src="blinkit-omuni-sync.js"></script>
+  <script src="orders-my-orders.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

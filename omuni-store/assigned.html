@@ -24,12 +24,12 @@
   </header>
 
   <div class="omuni-summary-row">
-    <span>7 Orders</span>
-    <span>Worth Rs. 4,193</span>
+    <span id="omuniSummaryOrders">7 Orders</span>
+    <span id="omuniSummaryWorth">Worth Rs. 4,193</span>
   </div>
 
   <main class="omuni-page omuni-page--assigned">
-    <ul class="omuni-assigned-list">
+    <ul class="omuni-assigned-list" id="omuniAssignedList">
       <li>
         <a href="process.html?hyperlocal=1" class="omuni-consignment-card omuni-consignment-card--hyperlocal">
           <img class="omuni-consignment-card__thumb" src="https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=160&h=160&fit=crop&auto=format&q=80" alt="" width="72" height="72" />
@@ -298,77 +298,7 @@
       </li>
     </ul>
   </main>
-  <script>
-    (function () {
-      var SLA_BOUNDS_SEC = {
-        hyperlocal: { min: 10 * 60, max: 15 * 60 },
-        sdd: { min: 1, max: 2 * 60 * 60 - 1 },
-        standard: { min: 1, max: 12 * 60 * 60 - 1 }
-      };
-
-      function pad(n) {
-        return (n < 10 ? "0" : "") + n;
-      }
-
-      function randomIntInclusive(min, max) {
-        return min + Math.floor(Math.random() * (max - min + 1));
-      }
-
-      function initTimer(el) {
-        var kind = el.getAttribute("data-sla-kind");
-        var bounds = SLA_BOUNDS_SEC[kind];
-        if (!bounds) return;
-
-        var remaining = randomIntInclusive(bounds.min, bounds.max);
-        var endAt = Date.now() + remaining * 1000;
-        el.dataset.slaEndAt = String(endAt);
-        var boxes = el.querySelectorAll(".omuni-timer__box");
-
-        function tick() {
-          var left = Math.floor((endAt - Date.now()) / 1000);
-          if (left < 0) left = 0;
-          var h = Math.floor(left / 3600);
-          var m = Math.floor((left % 3600) / 60);
-          var s = left % 60;
-          if (boxes.length >= 3) {
-            boxes[0].textContent = pad(h);
-            boxes[1].textContent = pad(m);
-            boxes[2].textContent = pad(s);
-          }
-          el.setAttribute(
-            "aria-label",
-            "Time remaining " + h + " hours " + m + " minutes " + s + " seconds"
-          );
-        }
-
-        tick();
-        setInterval(tick, 1000);
-      }
-
-      function sortAssignedList() {
-        var list = document.querySelector(".omuni-assigned-list");
-        if (!list) return;
-        var items = Array.prototype.slice.call(list.children);
-        items.sort(function (a, b) {
-          var aCard = a.querySelector(".omuni-consignment-card");
-          var bCard = b.querySelector(".omuni-consignment-card");
-          var aHL = aCard && aCard.classList.contains("omuni-consignment-card--hyperlocal");
-          var bHL = bCard && bCard.classList.contains("omuni-consignment-card--hyperlocal");
-          if (aHL !== bHL) return aHL ? -1 : 1;
-          var aTimer = a.querySelector(".omuni-timer[data-sla-end-at]");
-          var bTimer = b.querySelector(".omuni-timer[data-sla-end-at]");
-          var aEnd = aTimer ? parseInt(aTimer.dataset.slaEndAt, 10) : 0;
-          var bEnd = bTimer ? parseInt(bTimer.dataset.slaEndAt, 10) : 0;
-          return aEnd - bEnd;
-        });
-        items.forEach(function (li) {
-          list.appendChild(li);
-        });
-      }
-
-      document.querySelectorAll(".omuni-timer[data-sla-kind]").forEach(initTimer);
-      sortAssignedList();
-    })();
-  </script>
+  <script src="../blinkit-omuni-sync.js"></script>
+  <script src="omuni-assigned-blinkit.js"></script>
 </body>
 </html>

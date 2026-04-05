@@ -55,8 +55,61 @@
   var donationCheck = document.getElementById("donationCheck");
   var tipRow = document.getElementById("tipRow");
 
+  var checkoutSavedAddressBlock = document.getElementById("checkoutSavedAddressBlock");
+  var checkoutPaymentBlock = document.getElementById("checkoutPaymentBlock");
+  var checkoutPaymentHint = document.getElementById("checkoutPaymentHint");
+  var checkoutAddressFields = document.getElementById("checkoutAddressFields");
+  /** When true, cart already has a delivery address — skip address form and show payment only. */
+  var CHECKOUT_USE_SAVED_ADDRESS = true;
+
   var locationModal = document.getElementById("locationModal");
   var locationBtn = document.getElementById("locationBtn");
+
+  var navAccountWrap = document.getElementById("navAccountWrap");
+  var navAccountBtn = document.getElementById("navAccountBtn");
+  var navAccountDropdown = document.getElementById("navAccountDropdown");
+
+  function closeAccountDropdown() {
+    if (!navAccountWrap || !navAccountDropdown || !navAccountBtn) return;
+    navAccountWrap.classList.remove("nav-account-wrap--open");
+    navAccountDropdown.hidden = true;
+    navAccountBtn.setAttribute("aria-expanded", "false");
+  }
+
+  function openAccountDropdown() {
+    if (!navAccountWrap || !navAccountDropdown || !navAccountBtn) return;
+    navAccountWrap.classList.add("nav-account-wrap--open");
+    navAccountDropdown.hidden = false;
+    navAccountBtn.setAttribute("aria-expanded", "true");
+  }
+
+  function toggleAccountDropdown() {
+    if (!navAccountDropdown) return;
+    if (navAccountDropdown.hidden) openAccountDropdown();
+    else closeAccountDropdown();
+  }
+
+  if (navAccountBtn && navAccountDropdown) {
+    navAccountBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      toggleAccountDropdown();
+    });
+    navAccountDropdown.querySelectorAll("a").forEach(function (a) {
+      a.addEventListener("click", function (e) {
+        var href = a.getAttribute("href");
+        if (!href || href === "#") {
+          e.preventDefault();
+        }
+        closeAccountDropdown();
+      });
+    });
+  }
+
+  document.addEventListener("click", function (e) {
+    if (!navAccountWrap || !navAccountDropdown || navAccountDropdown.hidden) return;
+    if (navAccountWrap.contains(e.target)) return;
+    closeAccountDropdown();
+  });
 
   var omuniBenefitsSlide = document.getElementById("omuniSlideBenefits");
   var omuniBenefitsOpen = document.getElementById("omuniBenefitsOpen");
@@ -887,6 +940,18 @@
     });
   }
 
+  function applyCheckoutAddressMode() {
+    if (!checkoutAddressFields) return;
+    var useSaved = CHECKOUT_USE_SAVED_ADDRESS;
+    checkoutAddressFields.hidden = useSaved;
+    checkoutAddressFields.querySelectorAll("input").forEach(function (inp) {
+      inp.disabled = useSaved;
+    });
+    if (checkoutSavedAddressBlock) checkoutSavedAddressBlock.hidden = !useSaved;
+    if (checkoutPaymentBlock) checkoutPaymentBlock.hidden = !useSaved;
+    if (checkoutPaymentHint) checkoutPaymentHint.hidden = !useSaved;
+  }
+
   function openCheckout() {
     if (cartItemCount() === 0) return;
     closeCart();
@@ -919,6 +984,7 @@
     if (checkoutTitle) checkoutTitle.textContent = "Checkout";
     if (checkoutSticky) checkoutSticky.hidden = false;
     if (checkoutStickyTotal) checkoutStickyTotal.textContent = formatRupee(computeCheckoutTotal());
+    applyCheckoutAddressMode();
     checkoutModal.hidden = false;
     document.body.classList.add("checkout-open");
   }
@@ -953,6 +1019,9 @@
       if (checkoutSuccess) checkoutSuccess.hidden = false;
       if (checkoutTitle) checkoutTitle.textContent = "Order placed";
       if (checkoutSticky) checkoutSticky.hidden = true;
+      if (typeof BlinkitOmuniSync !== "undefined" && BlinkitOmuniSync.recordOrder) {
+        BlinkitOmuniSync.recordOrder(cart, computeCheckoutTotal());
+      }
       cart = {};
       renderCartDrawer();
       document.querySelectorAll(".product-card").forEach(syncCardActions);
@@ -966,6 +1035,7 @@
       if (checkoutForm) checkoutForm.hidden = false;
       if (checkoutSuccess) checkoutSuccess.hidden = true;
       if (checkoutSticky) checkoutSticky.hidden = false;
+      applyCheckoutAddressMode();
     });
   }
 
@@ -1003,6 +1073,10 @@
 
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape") return;
+    if (navAccountWrap && navAccountWrap.classList.contains("nav-account-wrap--open")) {
+      closeAccountDropdown();
+      return;
+    }
     if (
       lifestyleFiltersRoot &&
       lifestyleFiltersRoot.querySelector(".lifestyle-filter-panel:not([hidden])")
