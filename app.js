@@ -5,7 +5,10 @@
   var productsTitle = document.getElementById("productsTitle");
   var gridDefault = document.getElementById("gridDefault");
   var gridApparel = document.getElementById("gridApparel");
+  var gridLifestyle = document.getElementById("gridLifestyle");
   var productsSection = document.getElementById("productsSection");
+  var lifestyleBrandStrip = document.getElementById("lifestyleBrandStrip");
+  var lifestyleBrandFilter = "all";
 
   var searchInput = document.getElementById("searchInput");
   var searchClear = document.getElementById("searchClear");
@@ -172,7 +175,6 @@
     beverages: "Cold drinks & juices",
     instant: "Breakfast & instant food",
     personal: "Personal care",
-    apparel: "Apparels",
   };
 
   var selectedTip = 0;
@@ -181,6 +183,48 @@
 
   window.blinkitGetCartForEta = function () {
     return cart;
+  };
+
+  /** Remove cart lines whose product id is in ids (e.g. when apparel goes OOS). */
+  window.blinkitRemoveLinesForProductIds = function (ids) {
+    if (!ids || !ids.length) return;
+    var drop = {};
+    ids.forEach(function (id) {
+      drop[id] = true;
+    });
+    var changed = false;
+    Object.keys(cart).forEach(function (key) {
+      var it = cart[key];
+      if (it && it.id && drop[it.id]) {
+        delete cart[key];
+        changed = true;
+      }
+    });
+    if (changed) {
+      renderCartDrawer();
+      document.querySelectorAll(".product-card").forEach(syncCardActions);
+    }
+  };
+
+  /** Lifestyle page: remove cart lines whose product id is not in the baseline allowlist (toggle off). */
+  window.blinkitRemoveCartLinesNotInAllowlist = function (allowlist) {
+    if (!allowlist || !allowlist.length) return;
+    var allow = {};
+    allowlist.forEach(function (id) {
+      allow[id] = true;
+    });
+    var changed = false;
+    Object.keys(cart).forEach(function (key) {
+      var it = cart[key];
+      if (it && it.id && !allow[it.id]) {
+        delete cart[key];
+        changed = true;
+      }
+    });
+    if (changed) {
+      renderCartDrawer();
+      document.querySelectorAll(".product-card").forEach(syncCardActions);
+    }
   };
 
   function formatRupee(n) {
@@ -268,6 +312,9 @@
   }
 
   function getVisibleProductCards() {
+    if (gridLifestyle) {
+      return Array.prototype.slice.call(gridLifestyle.querySelectorAll(".product-card"));
+    }
     var grid = gridApparel && !gridApparel.hidden ? gridApparel : gridDefault;
     if (!grid) return [];
     return Array.prototype.slice.call(grid.querySelectorAll(".product-card"));
@@ -287,8 +334,27 @@
     }
     getVisibleProductCards().forEach(function (card) {
       var name = (card.getAttribute("data-name") || "").toLowerCase();
-      var match = !lower || name.indexOf(lower) !== -1;
-      card.style.display = match ? "" : "none";
+      var matchSearch = !lower || name.indexOf(lower) !== -1;
+      var matchBrand = true;
+      if (gridLifestyle) {
+        var b = card.getAttribute("data-brand") || "";
+        matchBrand = lifestyleBrandFilter === "all" || b === lifestyleBrandFilter;
+      }
+      card.style.display = matchSearch && matchBrand ? "" : "none";
+    });
+  }
+
+  if (lifestyleBrandStrip) {
+    lifestyleBrandStrip.addEventListener("click", function (e) {
+      var chip = e.target.closest("[data-brand-filter]");
+      if (!chip) return;
+      lifestyleBrandFilter = chip.getAttribute("data-brand-filter") || "all";
+      lifestyleBrandStrip.querySelectorAll("[data-brand-filter]").forEach(function (c) {
+        var active = c === chip;
+        c.classList.toggle("brand-chip--active", active);
+        if (c.hasAttribute("aria-selected")) c.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      applySearchFilter();
     });
   }
 
@@ -443,6 +509,7 @@
   }
 
   function addOrIncrement(card) {
+    if (card.classList.contains("product-card--out-of-stock")) return;
     var key = getLineKey(card);
     if (!key) return;
     var price = parseFloat(card.getAttribute("data-price"));
@@ -480,8 +547,20 @@
   function syncCardActions(card) {
     var root = card.querySelector("[data-action-root]");
     if (!root) return;
+    var sel = card.querySelector("[data-size-select]");
+    if (sel) sel.disabled = card.classList.contains("product-card--out-of-stock");
     var qty = getQtyForCard(card);
     root.innerHTML = "";
+
+    if (card.classList.contains("product-card--out-of-stock")) {
+      var oos = document.createElement("button");
+      oos.type = "button";
+      oos.className = "add-btn add-btn--oos";
+      oos.disabled = true;
+      oos.textContent = "OUT OF STOCK";
+      root.appendChild(oos);
+      return;
+    }
 
     if (qty <= 0) {
       var add = document.createElement("button");
@@ -551,7 +630,7 @@
 
   function setActiveCategory(cat) {
     if (!categoryStrip) return;
-    categoryStrip.querySelectorAll(".cat-tile").forEach(function (btn) {
+    categoryStrip.querySelectorAll("button.cat-tile").forEach(function (btn) {
       var is = btn.getAttribute("data-category") === cat;
       btn.classList.toggle("cat-tile--active", is);
       btn.setAttribute("aria-selected", is ? "true" : "false");
@@ -572,7 +651,7 @@
   }
 
   if (categoryStrip) {
-    categoryStrip.querySelectorAll(".cat-tile").forEach(function (btn) {
+    categoryStrip.querySelectorAll("button.cat-tile").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var cat = btn.getAttribute("data-category") || "all";
         setActiveCategory(cat);
@@ -763,6 +842,7 @@
 
   document.addEventListener("omuni:state-changed", function () {
     renderCartDrawer();
+    document.querySelectorAll(".product-card").forEach(syncCardActions);
   });
 
   initProductCards();

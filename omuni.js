@@ -110,14 +110,17 @@
     return Math.abs(h);
   }
 
-  /** Stable “random” per product: without Omuni 21–30 min; with Omuni 10–15 min. */
-  function apparelMinutesForProduct(productId, omuniOn) {
-    var h = hashString(String(productId) + (omuniOn ? "O" : "D"));
-    if (omuniOn) {
-      return 10 + (h % 6);
-    }
-    return 21 + (h % 10);
+  /**
+   * Apparel ETAs stay the same whether “Stock from nearby stores” is on or off.
+   * Stable 25–35 min per product id (aligned with fashion fulfilment window).
+   */
+  function apparelDeliveryMinutes(productId) {
+    var h = hashString(String(productId) + "O");
+    return 25 + (h % 11);
   }
+
+  /** Apparel SKUs that are only available when nearby-store inventory is on (OOS when toggle off). */
+  var NEARBY_STOCK_APPAREL_IDS = ["lv-bata-1", "lv-tommy-1"];
 
   function formatMinsLabel(mins) {
     return mins + " MINS";
@@ -130,7 +133,7 @@
       var useOmuni = state.isOmuniEnabled;
       if (card.classList.contains("product-card--apparel")) {
         var pid = card.getAttribute("data-id") || "";
-        var m = apparelMinutesForProduct(pid, useOmuni);
+        var m = apparelDeliveryMinutes(pid);
         eta.textContent = formatMinsLabel(m);
       } else if (card.hasAttribute("data-eta-default")) {
         var v = useOmuni
@@ -143,6 +146,82 @@
         useOmuni && card.classList.contains("product-card--apparel")
       );
     });
+  }
+
+  function applyNearbyStockAvailability() {
+    var gridLifestyle = document.getElementById("gridLifestyle");
+    if (gridLifestyle && window.LIFESTYLE_BASELINE_IDS && window.LIFESTYLE_BASELINE_IDS.length) {
+      var allow = {};
+      window.LIFESTYLE_BASELINE_IDS.forEach(function (id) {
+        allow[id] = true;
+      });
+      gridLifestyle.querySelectorAll(".product-card").forEach(function (card) {
+        var id = card.getAttribute("data-id") || "";
+        var oos = !state.isOmuniEnabled && !allow[id];
+        card.classList.toggle("product-card--out-of-stock", oos);
+      });
+      if (!state.isOmuniEnabled && typeof window.blinkitRemoveCartLinesNotInAllowlist === "function") {
+        window.blinkitRemoveCartLinesNotInAllowlist(window.LIFESTYLE_BASELINE_IDS);
+      }
+      return;
+    }
+    NEARBY_STOCK_APPAREL_IDS.forEach(function (id) {
+      document.querySelectorAll('.product-card[data-id="' + id + '"]').forEach(function (card) {
+        card.classList.toggle("product-card--out-of-stock", !state.isOmuniEnabled);
+      });
+    });
+    if (!state.isOmuniEnabled && typeof window.blinkitRemoveLinesForProductIds === "function") {
+      window.blinkitRemoveLinesForProductIds(NEARBY_STOCK_APPAREL_IDS);
+    }
+  }
+
+  /** Previous nearby-stock toggle for lifestyle grid (avoid reshuffling every applyAll while on). */
+  var lifestyleNearbyPrev = null;
+
+  function sortLifestyleGridStockFirst(grid) {
+    var cards = Array.prototype.slice.call(grid.querySelectorAll(".product-card"));
+    if (!cards.length) return;
+    var inStock = [];
+    var oos = [];
+    for (var i = 0; i < cards.length; i++) {
+      if (cards[i].classList.contains("product-card--out-of-stock")) oos.push(cards[i]);
+      else inStock.push(cards[i]);
+    }
+    inStock.forEach(function (c) {
+      grid.appendChild(c);
+    });
+    oos.forEach(function (c) {
+      grid.appendChild(c);
+    });
+  }
+
+  function shuffleLifestyleGrid(grid) {
+    var cards = Array.prototype.slice.call(grid.querySelectorAll(".product-card"));
+    if (cards.length < 2) return;
+    for (var i = cards.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = cards[i];
+      cards[i] = cards[j];
+      cards[j] = t;
+    }
+    cards.forEach(function (c) {
+      grid.appendChild(c);
+    });
+  }
+
+  /** In-stock grouped at top when toggle off; reshuffle when toggle turns on (all available). */
+  function reorderLifestyleProductGrid() {
+    var grid = document.getElementById("gridLifestyle");
+    if (!grid || !window.LIFESTYLE_BASELINE_IDS || !window.LIFESTYLE_BASELINE_IDS.length) return;
+
+    if (state.isOmuniEnabled) {
+      if (lifestyleNearbyPrev !== true) {
+        shuffleLifestyleGrid(grid);
+      }
+    } else {
+      sortLifestyleGridStockFirst(grid);
+    }
+    lifestyleNearbyPrev = state.isOmuniEnabled;
   }
 
   function applyMetricsAnimated() {
@@ -236,8 +315,8 @@
   /** Single source for cart row + headline ETAs (matches product cards). */
   function getCartLineEtaLabel(productId) {
     var id = String(productId || "");
-    if (id.indexOf("a-") === 0) {
-      return formatMinsLabel(apparelMinutesForProduct(id, state.isOmuniEnabled));
+    if (id.indexOf("a-") === 0 || id.indexOf("lv-") === 0) {
+      return formatMinsLabel(apparelDeliveryMinutes(id));
     }
     if (id.indexOf("g-") === 0) {
       return groceryEtaLabelFromCard(id);
@@ -278,6 +357,8 @@
 
     applyCopy();
     applyProductEtas();
+    applyNearbyStockAvailability();
+    reorderLifestyleProductGrid();
     applyMetricsAnimated();
     refreshCartDeliveryLine();
 
@@ -327,12 +408,12 @@
     refresh: applyAll,
     /** ETA string e.g. "24 MINS" for cart rows — uses same rules as product cards. */
     getApparelEtaLabel: function (productId) {
-      return formatMinsLabel(apparelMinutesForProduct(productId, state.isOmuniEnabled));
+      return formatMinsLabel(apparelDeliveryMinutes(productId));
     },
   };
 
   window.omuniGetApparelEtaForProduct = function (productId) {
-    return formatMinsLabel(apparelMinutesForProduct(productId, state.isOmuniEnabled));
+    return formatMinsLabel(apparelDeliveryMinutes(productId));
   };
 
   /** Cart row ETA label — matches homepage product cards (grocery + apparel). */

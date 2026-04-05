@@ -451,6 +451,18 @@ button {
   cursor: pointer;
 }
 
+a.cat-tile--link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+a.cat-tile--link:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+  border-radius: 14px;
+}
+
 .cat-tile__img {
   width: 72px;
   height: 72px;
@@ -539,6 +551,84 @@ body.omuni-on .cat-tile__meta {
 .cat-tile__img--apparel {
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, transparent 55%),
     url("https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200&h=200&fit=crop&auto=format&q=80");
+}
+
+/* ----- Lifestyle & Apparels page ----- */
+.page-main--lifestyle {
+  padding-top: 0;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.lifestyle-brand-strip {
+  padding: 12px 0 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.lifestyle-brand-strip__scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 0 16px 6px;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.lifestyle-brand-strip__scroll::-webkit-scrollbar {
+  height: 5px;
+}
+
+.lifestyle-brand-strip__scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.brand-chip {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-page);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.brand-chip:hover {
+  border-color: rgba(12, 131, 31, 0.45);
+  color: var(--green);
+}
+
+.brand-chip--active {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.brand-chip--active:hover {
+  color: #fff;
+  border-color: var(--green);
+}
+
+.products--lifestyle {
+  margin-top: 12px;
+}
+
+.products__head--lifestyle {
+  margin-bottom: 4px;
+}
+
+.lifestyle-page-title {
+  font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 0;
+  padding: 4px 4px 12px;
 }
 
 .search-results-title {
@@ -2088,6 +2178,29 @@ body.omuni-on .products-omuni-note {
   color: var(--green);
   font-weight: 900;
   text-shadow: 0 0 12px rgba(34, 197, 94, 0.35);
+}
+
+.product-card--out-of-stock .product-card__media {
+  opacity: 0.5;
+}
+
+.product-card--out-of-stock .product-card__time {
+  display: none;
+}
+
+.product-card--out-of-stock .product-card__name,
+.product-card--out-of-stock .product-card__prices {
+  opacity: 0.85;
+}
+
+.add-btn--oos {
+  width: 100%;
+  cursor: not-allowed;
+  border: 1px dashed var(--border);
+  background: #f3f4f6;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.7rem;
 }
 
 .omuni-ops-strip {
