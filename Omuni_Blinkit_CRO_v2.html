@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>blinkit × Omuni — Fashion & Lifestyle</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow: #FFD800;
+    --black: #0D0D0D;
+    --dark: #141414;
+    --card: #1E1E1E;
+    --card2: #252525;
+    --white: #FFFFFF;
+    --gray: #888;
+    --gray2: #555;
+    --green: #22C55E;
+    --red: #EF4444;
+    --orange: #FF6B35;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; background: var(--black); font-family: 'DM Sans', sans-serif; overflow: hidden; color: var(--white); cursor: none; }
+
+  .cursor { position: fixed; width: 12px; height: 12px; background: var(--yellow); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: transform 0.1s, width 0.2s, height 0.2s; mix-blend-mode: difference; }
+  .cursor.big { width: 40px; height: 40px; }
+
+  #progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--yellow); z-index: 1000; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+  #counter { position: fixed; bottom: 28px; right: 36px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gray2); letter-spacing: 2px; z-index: 1000; }
+  #dots { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 1000; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gray2); transition: all 0.3s; cursor: pointer; }
+  .dot.active { background: var(--yellow); width: 20px; border-radius: 3px; }
+  .nav-btn { position: fixed; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--gray2); font-size: 28px; cursor: pointer; z-index: 1000; padding: 16px; transition: color 0.2s; }
+  .nav-btn:hover { color: var(--yellow); }
+  #nav-prev { left: 16px; }
+  #nav-next { right: 16px; }
+
+  #deck { width: 100%; height: 100%; position: relative; }
+
+  .slide { position: absolute; inset: 0; display: flex; opacity: 0; pointer-events: none; transition: opacity 0.05s; }
+  .slide.active { opacity: 1; pointer-events: all; }
+
+  .slide.active .reveal { animation: revealUp 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+  .slide.active .reveal.d1 { animation-delay: 0.05s; }
+  .slide.active .reveal.d2 { animation-delay: 0.15s; }
+  .slide.active .reveal.d3 { animation-delay: 0.25s; }
+  .slide.active .reveal.d4 { animation-delay: 0.35s; }
+  .slide.active .reveal.d5 { animation-delay: 0.45s; }
+  .slide.active .reveal.d6 { animation-delay: 0.55s; }
+  .slide.active .reveal.d7 { animation-delay: 0.65s; }
+  .slide.active .reveal.d8 { animation-delay: 0.75s; }
+  .slide.active .fade { animation: fadeIn 0.9s ease both; }
+  .slide.active .fade.d1 { animation-delay: 0.1s; }
+  .slide.active .fade.d2 { animation-delay: 0.2s; }
+  .slide.active .fade.d3 { animation-delay: 0.35s; }
+  .slide.active .fade.d4 { animation-delay: 0.5s; }
+  .slide.active .fade.d5 { animation-delay: 0.65s; }
+  .slide.active .fade.d6 { animation-delay: 0.8s; }
+  .slide.active .fade.d7 { animation-delay: 0.95s; }
+  .slide.active .fade.d8 { animation-delay: 1.1s; }
+
+  @keyframes revealUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes pulse-green { 0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); } 50% { box-shadow: 0 0 0 8px rgba(34,197,94,0); } }
+
+  #transition-overlay { position: fixed; inset: 0; background: var(--yellow); z-index: 500; transform: scaleX(0); transform-origin: left; pointer-events: none; }
+
+  #hint { position: fixed; bottom: 28px; left: 36px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gray2); letter-spacing: 1px; opacity: 1; transition: opacity 1s; }
+  #hint.hidden { opacity: 0; }
+
+  /* ── Shared layout ── */
+  .slide-header { padding: 44px 64px 0; display: flex; align-items: baseline; gap: 20px; }
+  .slide-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--yellow); letter-spacing: 3px; }
+  .slide-title { font-family: 'Bebas Neue', sans-serif; font-size: 40px; letter-spacing: 1px; color: var(--white); }
+  .slide-title span { color: var(--yellow); }
+  .slide-sub { padding: 6px 64px 0; font-size: 14px; color: var(--gray); font-style: italic; }
+
+  /* ══ SLIDE 1: TITLE ══════════════════════════════════════ */
+  #s1 { background: var(--black); }
+  .s1-left { width: 42%; background: var(--yellow); display: flex; flex-direction: column; justify-content: center; padding: 60px 56px; position: relative; overflow: hidden; }
+  .s1-bg-c { position: absolute; border-radius: 50%; background: rgba(0,0,0,0.07); }
+  .s1-bg-c.c1 { width: 300px; height: 300px; top: -80px; right: -80px; }
+  .s1-bg-c.c2 { width: 160px; height: 160px; bottom: 60px; left: -40px; }
+  .s1-brand { font-family: 'Bebas Neue', sans-serif; font-size: 64px; color: var(--black); letter-spacing: 2px; line-height: 1; }
+  .s1-x { font-size: 32px; color: rgba(0,0,0,0.3); margin: 8px 0 4px; font-weight: 300; }
+  .s1-partner { font-family: 'Bebas Neue', sans-serif; font-size: 64px; color: var(--black); letter-spacing: 4px; line-height: 1; }
+  .s1-div { width: 60px; height: 4px; background: var(--black); margin: 28px 0; border-radius: 2px; }
+  .s1-tag { font-size: 16px; font-weight: 600; color: var(--black); line-height: 1.5; max-width: 260px; }
+
+  .s1-right { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 60px 64px 60px 56px; position: relative; }
+  .s1-eye { font-size: 11px; letter-spacing: 4px; color: var(--gray); text-transform: uppercase; margin-bottom: 24px; font-family: 'DM Mono', monospace; }
+  .s1-hl { font-family: 'Bebas Neue', sans-serif; font-size: 70px; line-height: 1; color: var(--white); letter-spacing: 1px; margin-bottom: 32px; }
+  .s1-hl span { color: var(--yellow); }
+  .s1-body { font-size: 17px; line-height: 1.7; color: var(--gray); max-width: 440px; font-weight: 300; }
+  .s1-meta { position: absolute; bottom: 36px; right: 64px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gray2); letter-spacing: 2px; }
+  .s1-dots { position: absolute; bottom: 50px; left: 56px; display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; }
+  .s1-d { width: 4px; height: 4px; border-radius: 50%; background: var(--gray2); }
+
+  /* ══ SLIDE 2: BLINKIT FRONTIER ═══════════════════════════ */
+  #s2 { background: var(--dark); flex-direction: column; }
+  .s2-cards { flex: 1; display: flex; gap: 20px; padding: 24px 64px 28px; }
+  .s2-card { flex: 1; background: var(--card); border-radius: 4px; padding: 32px 28px; position: relative; overflow: hidden; }
+  .s2-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--yellow); }
+  .s2-num { font-family: 'Bebas Neue', sans-serif; font-size: 68px; color: var(--yellow); line-height: 1; margin-bottom: 4px; }
+  .s2-lbl { font-size: 12px; font-weight: 700; color: var(--white); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+  .s2-txt { font-size: 13px; color: var(--gray); line-height: 1.7; }
+  .s2-txt strong { color: var(--white); }
+  .s2-foot { padding: 0 64px 52px; }
+  .s2-insight { background: linear-gradient(135deg,#1a1a00,#111); border: 1px solid rgba(255,216,0,0.2); border-left: 3px solid var(--yellow); border-radius: 4px; padding: 20px 28px; font-size: 14px; color: var(--white); line-height: 1.6; }
+  .s2-insight strong { color: var(--yellow); }
+
+  /* ══ SLIDE 3: WHY FASHION HASN'T SCALED ═════════════════ */
+  #s3 { background: var(--black); flex-direction: column; }
+  .s3-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 16px; padding: 20px 64px 52px; }
+  .s3-item { background: var(--card); border-radius: 4px; padding: 28px 32px; display: flex; gap: 20px; align-items: flex-start; }
+  .s3-icon-wrap { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 20px; }
+  .s3-icon-wrap.red { background: rgba(239,68,68,0.12); }
+  .s3-title { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+  .s3-body { font-size: 13px; color: var(--gray); line-height: 1.7; }
+  .s3-body strong { color: var(--white); }
+
+  /* ══ SLIDE 4: WHAT WE BRING ══════════════════════════════ */
+  #s4 { background: var(--dark); flex-direction: column; }
+  .s4-stats { display: flex; gap: 16px; padding: 24px 64px 20px; }
+  .s4-stat { flex: 1; background: var(--card); border-radius: 4px; padding: 28px 24px; position: relative; overflow: hidden; }
+  .s4-stat::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--yellow); transform: scaleX(0); transform-origin: left; }
+  .slide.active .s4-stat:nth-child(1)::after { animation: slideBar 0.7s ease 0.3s both; }
+  .slide.active .s4-stat:nth-child(2)::after { animation: slideBar 0.7s ease 0.45s both; }
+  .slide.active .s4-stat:nth-child(3)::after { animation: slideBar 0.7s ease 0.6s both; }
+  .s4-num { font-family: 'Bebas Neue', sans-serif; font-size: 58px; color: var(--yellow); line-height: 1; margin-bottom: 6px; }
+  .s4-lbl strong { display: block; color: var(--white); font-size: 13px; margin-bottom: 2px; }
+  .s4-lbl { font-size: 12px; color: var(--gray); line-height: 1.5; }
+
+  .s4-brands-section { padding: 16px 64px 16px; }
+  .s4-brands-label { font-size: 11px; color: var(--gray); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 14px; font-family: 'DM Mono', monospace; }
+  .s4-brands { display: flex; gap: 10px; flex-wrap: wrap; }
+  .s4-pill { border-radius: 2px; padding: 10px 18px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; transition: all 0.2s; }
+  .s4-pill.ready { background: rgba(255,216,0,0.12); border: 1px solid var(--yellow); color: var(--yellow); }
+  .s4-pill.soon { background: var(--card2); border: 1px solid var(--gray2); color: var(--gray); }
+  .s4-pill-note { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--gray2); margin-top: 10px; letter-spacing: 1px; }
+
+  .s4-infra { padding: 0 64px 44px; display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
+  .s4-infra-item { background: var(--card); border-radius: 4px; padding: 16px 20px; display: flex; align-items: center; gap: 14px; }
+  .s4-infra-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .slide.active .s4-infra-dot { animation: pulse-green 2s ease infinite; }
+  .s4-infra-text strong { color: var(--white); display: block; font-size: 13px; }
+  .s4-infra-text { font-size: 12px; color: var(--gray); }
+
+  /* ══ SLIDE 5: ORDER FLOW ═════════════════════════════════ */
+  #s5 { background: var(--black); flex-direction: column; }
+  .s5-flow { flex: 1; display: flex; align-items: center; padding: 12px 40px 20px; gap: 0; }
+  .s5-step { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; }
+  .s5-connector { position: absolute; top: 48px; left: 50%; width: 100%; height: 2px; background: linear-gradient(90deg, var(--yellow) 0%, rgba(255,216,0,0.25) 100%); transform-origin: left; }
+  .slide.active .s5-step:nth-child(1) .s5-connector { animation: slideBar 0.5s ease 0.35s both; }
+  .slide.active .s5-step:nth-child(2) .s5-connector { animation: slideBar 0.5s ease 0.6s both; }
+  .slide.active .s5-step:nth-child(3) .s5-connector { animation: slideBar 0.5s ease 0.85s both; }
+  .slide.active .s5-step:nth-child(4) .s5-connector { animation: slideBar 0.5s ease 1.1s both; }
+  .s5-circle { width: 96px; height: 96px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column; margin-bottom: 18px; position: relative; z-index: 1; flex-shrink: 0; }
+  .s5-circle.yellow { background: var(--yellow); }
+  .s5-circle.dark { background: var(--card); border: 2px solid var(--gray2); }
+  .s5-circle.green { background: var(--green); }
+  .s5-sn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; line-height: 1; }
+  .s5-circle.yellow .s5-sn, .s5-circle.green .s5-sn { color: rgba(0,0,0,0.4); }
+  .s5-circle.dark .s5-sn { color: var(--gray); }
+  .s5-icon { font-size: 26px; line-height: 1; }
+  .s5-name { font-size: 13px; font-weight: 700; color: var(--white); text-align: center; margin-bottom: 6px; padding: 0 6px; }
+  .s5-desc { font-size: 11px; color: var(--gray); text-align: center; line-height: 1.6; padding: 0 8px; max-width: 150px; }
+
+  .s5-sla { padding: 0 64px 44px; display: flex; gap: 14px; }
+  .s5-sla-box { flex: 1; background: linear-gradient(135deg,#1a1a00,#111); border: 1px solid rgba(255,216,0,0.2); border-radius: 4px; padding: 14px 20px; display: flex; align-items: center; gap: 14px; }
+  .s5-sla-val { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--yellow); line-height: 1; flex-shrink: 0; }
+  .s5-sla-label strong { display: block; color: var(--white); font-size: 12px; }
+  .s5-sla-label { font-size: 11px; color: var(--gray); line-height: 1.5; }
+
+  /* ══ SLIDE 6: WHAT BLINKIT GETS ══════════════════════════ */
+  #s6 { background: var(--dark); flex-direction: column; }
+  .s6-body { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 24px 64px 56px; }
+  .s6-card { background: var(--card); border-radius: 4px; padding: 40px 36px; display: flex; flex-direction: column; }
+  .s6-card.featured { background: var(--yellow); }
+  .s6-eye { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; font-family: 'DM Mono', monospace; margin-bottom: 16px; }
+  .s6-card.featured .s6-eye { color: rgba(0,0,0,0.45); }
+  .s6-card:not(.featured) .s6-eye { color: var(--yellow); }
+  .s6-head { font-family: 'Bebas Neue', sans-serif; font-size: 42px; line-height: 1; margin-bottom: 10px; }
+  .s6-card.featured .s6-head { color: var(--black); }
+  .s6-card:not(.featured) .s6-head { color: var(--white); }
+  .s6-sub { font-size: 15px; font-weight: 700; margin-bottom: 20px; }
+  .s6-card.featured .s6-sub { color: var(--black); }
+  .s6-card:not(.featured) .s6-sub { color: var(--white); }
+  .s6-txt { font-size: 14px; line-height: 1.75; flex: 1; }
+  .s6-card.featured .s6-txt { color: rgba(0,0,0,0.6); }
+  .s6-card:not(.featured) .s6-txt { color: var(--gray); }
+  .s6-bullets { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+  .s6-bullets li { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; }
+  .s6-bullet-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .s6-card.featured .s6-bullet-dot { background: var(--black); }
+  .s6-card:not(.featured) .s6-bullet-dot { background: var(--yellow); }
+  .s6-card.featured .s6-bullets li { color: rgba(0,0,0,0.65); }
+  .s6-card:not(.featured) .s6-bullets li { color: var(--gray); }
+
+  /* ══ SLIDE 7: WHY NOW ════════════════════════════════════ */
+  #s7 { background: var(--black); flex-direction: column; }
+  .s7-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 14px; padding: 24px 64px 56px; }
+  .s7-item { background: var(--card); border-radius: 4px; padding: 22px 28px; display: flex; gap: 18px; align-items: flex-start; position: relative; overflow: hidden; }
+  .s7-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--yellow); }
+  .s7-check { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,216,0,0.12); border: 1px solid var(--yellow); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--yellow); flex-shrink: 0; margin-top: 1px; }
+  .s7-title { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 5px; }
+  .s7-body { font-size: 12px; color: var(--gray); line-height: 1.6; }
+
+  /* ══ SLIDE 8: NEXT STEPS ═════════════════════════════════ */
+  #s8 { background: var(--black); }
+  .s8-left { width: 50%; background: var(--yellow); display: flex; flex-direction: column; justify-content: center; padding: 70px 64px; position: relative; overflow: hidden; }
+  .s8-bg-txt { position: absolute; font-family: 'Bebas Neue', sans-serif; font-size: 190px; color: rgba(0,0,0,0.07); line-height: 1; bottom: -20px; right: -10px; pointer-events: none; }
+  .s8-eye { font-size: 11px; letter-spacing: 4px; color: rgba(0,0,0,0.4); text-transform: uppercase; font-family: 'DM Mono', monospace; margin-bottom: 24px; }
+  .s8-hl { font-family: 'Bebas Neue', sans-serif; font-size: 76px; line-height: 0.95; color: var(--black); margin-bottom: 32px; }
+  .s8-tag { font-size: 15px; color: rgba(0,0,0,0.55); font-style: italic; line-height: 1.6; max-width: 340px; margin-bottom: 44px; }
+  .s8-credit { font-family: 'DM Mono', monospace; font-size: 11px; color: rgba(0,0,0,0.38); letter-spacing: 2px; }
+
+  .s8-right { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 70px 64px; }
+  .s8-next-lbl { font-size: 11px; letter-spacing: 4px; color: var(--yellow); text-transform: uppercase; font-family: 'DM Mono', monospace; margin-bottom: 32px; }
+  .s8-step { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 26px; padding-bottom: 26px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .s8-step:last-child { border-bottom: none; margin-bottom: 0; }
+  .s8-num { width: 32px; height: 32px; border-radius: 50%; background: var(--yellow); color: var(--black); font-family: 'Bebas Neue', sans-serif; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .s8-step-title { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .s8-step-body { font-size: 12px; color: var(--gray); line-height: 1.5; }
+
+  /* ══ SLIDE 9: THANK YOU ══════════════════════════════════ */
+  #s9 { background: var(--black); flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .s9-ring { position: absolute; border-radius: 50%; border: 1px solid rgba(255,216,0,0.08); pointer-events: none; }
+  .s9-ring.r1 { width: 500px; height: 500px; }
+  .s9-ring.r2 { width: 700px; height: 700px; }
+  .s9-ring.r3 { width: 900px; height: 900px; }
+  .s9-ring.r4 { width: 1100px; height: 1100px; }
+  .s9-center { display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; z-index: 1; }
+  .s9-small { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 4px; color: var(--yellow); text-transform: uppercase; margin-bottom: 28px; }
+  .s9-big { font-family: 'Bebas Neue', sans-serif; font-size: 120px; color: var(--white); line-height: 0.9; letter-spacing: 2px; margin-bottom: 20px; }
+  .s9-big span { color: var(--yellow); }
+  .s9-sub { font-size: 18px; color: var(--gray); font-weight: 300; line-height: 1.6; max-width: 500px; margin-bottom: 56px; }
+  .s9-contacts { display: flex; gap: 48px; }
+  .s9-contact { display: flex; flex-direction: column; align-items: center; }
+  .s9-contact-role { font-size: 10px; letter-spacing: 3px; color: var(--gray2); text-transform: uppercase; font-family: 'DM Mono', monospace; margin-bottom: 8px; }
+  .s9-contact-name { font-size: 16px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .s9-contact-info { font-size: 13px; color: var(--gray); }
+  .s9-divider { width: 1px; background: var(--gray2); }
+  .s9-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: var(--yellow); }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div id="progress"></div>
+<div id="transition-overlay"></div>
+
+<div id="deck">
+
+  <!-- ══ SLIDE 1: TITLE ════════════════════════════════════ -->
+  <div class="slide active" id="s1">
+    <div class="s1-left">
+      <div class="s1-bg-c c1"></div>
+      <div class="s1-bg-c c2"></div>
+      <div class="s1-brand reveal d1">blinkit</div>
+      <div class="s1-x reveal d2">×</div>
+      <div class="s1-partner reveal d2">OMUNI</div>
+      <div class="s1-div reveal d3"></div>
+      <div class="s1-tag reveal d4">Fashion &amp; Lifestyle:<br>Ready to Ship in 60 Minutes.</div>
+    </div>
+    <div class="s1-right">
+      <div class="s1-eye reveal d2">Confidential Briefing · 2025</div>
+      <div class="s1-hl reveal d3">WITH INFRASTRUCTURE<br><span>THAT'S ALREADY</span><br>LIVE.</div>
+      <div class="s1-body reveal d4">Unlocking the next category frontier for Blinkit — with a supply chain that's built, tested, and ready to deploy from brand stores directly to your customers.</div>
+      <div class="s1-dots fade d8">
+        <div class="s1-d"></div><div class="s1-d"></div><div class="s1-d"></div><div class="s1-d"></div><div class="s1-d"></div>
+        <div class="s1-d"></div><div class="s1-d"></div><div class="s1-d"></div><div class="s1-d"></div><div class="s1-d"></div>
+        <div class="s1-d"></div><div class="s1-d"></div><div class="s1-d"></div><div class="s1-d"></div><div class="s1-d"></div>
+      </div>
+      <div class="s1-meta fade d7">OMUNI × SHIPROCKET</div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 2: BLINKIT'S NEXT FRONTIER ══════════════════ -->
+  <div class="slide" id="s2">
+    <div style="display:flex;flex-direction:column;width:100%;height:100%;">
+      <div class="slide-header">
+        <span class="slide-num reveal d1">01</span>
+        <h2 class="slide-title reveal d1">BLINKIT'S <span>NEXT FRONTIER</span> IS CLEAR</h2>
+      </div>
+      <div class="slide-sub reveal d2">Grocery is saturated. Non-grocery is the growth battleground.</div>
+      <div class="s2-cards">
+        <div class="s2-card reveal d2">
+          <div class="s2-num">3×</div>
+          <div class="s2-lbl">Growth</div>
+          <div class="s2-txt">Q-Commerce grew <strong>3× in non-grocery categories in 2024</strong>. Fashion &amp; lifestyle is the logical next frontier — high AOV, high frequency, zero perishability.</div>
+        </div>
+        <div class="s2-card reveal d3">
+          <div class="s2-num">₹25K Cr</div>
+          <div class="s2-lbl">Market Potential</div>
+          <div class="s2-txt">Projected <strong>non-grocery GMV on q-comm platforms by 2026</strong>. The platform that owns supply side first dominates the category permanently.</div>
+        </div>
+        <div class="s2-card reveal d4">
+          <div class="s2-num">60 min</div>
+          <div class="s2-lbl">The New Benchmark</div>
+          <div class="s2-txt">Fashion brands can now <strong>deliver in under 60 minutes from store to doorstep</strong> — directly from existing brand stores, no dark store needed.</div>
+        </div>
+      </div>
+      <div class="s2-foot">
+        <div class="s2-insight reveal d5"><strong>The window is right now.</strong> Zepto and Swiggy Instamart are both building toward fashion. The platform that cracks supply-side first — real inventory, real SLAs — owns the category. First-mover advantage here is permanent.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 3: WHY FASHION HASN'T SCALED ════════════════ -->
+  <div class="slide" id="s3">
+    <div style="display:flex;flex-direction:column;width:100%;height:100%;">
+      <div class="slide-header">
+        <span class="slide-num reveal d1">02</span>
+        <h2 class="slide-title reveal d1">WHY FASHION HASN'T <span>SCALED</span> ON Q-COMMERCE</h2>
+      </div>
+      <div class="slide-sub reveal d2">Four structural blockers — and how Omuni removes all of them.</div>
+      <div class="s3-grid">
+
+        <div class="s3-item reveal d2">
+          <div class="s3-icon-wrap red">🏪</div>
+          <div>
+            <div class="s3-title">Dark store inventory replication is nearly impossible</div>
+            <div class="s3-body">Replicating fashion inventory across <strong>hundreds of dark stores nationwide</strong> is operationally unfeasible — wrong sizes, SKU explosion, dead stock. Omuni solves this by using <strong>existing brand stores as live fulfilment nodes</strong>, with no replication needed.</div>
+          </div>
+        </div>
+
+        <div class="s3-item reveal d3">
+          <div class="s3-icon-wrap red">↩️</div>
+          <div>
+            <div class="s3-title">Fashion demands a robust return policy</div>
+            <div class="s3-body">Fashion return rates run <strong>20–30%</strong>. Q-comm dark stores have no infrastructure to handle try-and-return, sizing exchanges, or condition checks. <strong>Brand stores naturally handle returns</strong> — Omuni automates the routing and reconciliation.</div>
+          </div>
+        </div>
+
+        <div class="s3-item reveal d4">
+          <div class="s3-icon-wrap red">📦</div>
+          <div>
+            <div class="s3-title">Blinkit dark stores have limited space</div>
+            <div class="s3-body">Dark store footprints are designed for grocery density. <strong>Adding fashion SKUs — bulky, size-variant, low-velocity</strong> — competes directly with core grocery categories. Fulfilling from brand stores removes this constraint entirely.</div>
+          </div>
+        </div>
+
+        <div class="s3-item reveal d5">
+          <div class="s3-icon-wrap red">🔍</div>
+          <div>
+            <div class="s3-title">No inventory visibility into brand stores</div>
+            <div class="s3-body">Blinkit has no way to know <strong>what stock exists in an Arrow store in Andheri right now</strong>. Without real-time visibility, accepting fashion orders means guaranteed cancellations. Omuni's live POS sync fixes this — every SKU, every store, every 30 seconds.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 4: WHAT WE BRING ════════════════════════════ -->
+  <div class="slide" id="s4">
+    <div style="display:flex;flex-direction:column;width:100%;height:100%;">
+      <div class="slide-header">
+        <span class="slide-num reveal d1">03</span>
+        <h2 class="slide-title reveal d1">WHAT WE BRING <span>TODAY</span></h2>
+      </div>
+      <div class="slide-sub reveal d2">This is not a proposal. This is ready-to-deploy infrastructure.</div>
+
+      <div class="s4-stats">
+        <div class="s4-stat reveal d2">
+          <div class="s4-num">5,000+</div>
+          <div class="s4-lbl"><strong>Brand Stores on Omuni</strong>Real-time POS sync, live inventory, order routing — all active today</div>
+        </div>
+        <div class="s4-stat reveal d3">
+          <div class="s4-num">Pan-India</div>
+          <div class="s4-lbl"><strong>Store Coverage</strong>Mumbai, Delhi NCR, Bengaluru, Hyderabad, Chennai, Pune, Ahmedabad &amp; Tier 2</div>
+        </div>
+        <div class="s4-stat reveal d4">
+          <div class="s4-num">35+</div>
+          <div class="s4-lbl"><strong>SR Hyperlocal Network</strong>Warehouses + hyperlocal fleet across all Indian metros, ready for 60-min delivery</div>
+        </div>
+      </div>
+
+      <div class="s4-brands-section reveal d4">
+        <div class="s4-brands-label">Brands on Omuni — ready to go live on Blinkit first</div>
+        <div class="s4-brands">
+          <div class="s4-pill ready">Levi's</div>
+          <div class="s4-pill ready">Blackberrys</div>
+          <div class="s4-pill ready">Bata</div>
+          <div class="s4-pill ready">USPA</div>
+          <div class="s4-pill ready">Tommy Hilfiger</div>
+          <div class="s4-pill ready">Calvin Klein</div>
+          <div class="s4-pill ready">Jack &amp; Jones</div>
+          <div class="s4-pill soon">+ many more</div>
+        </div>
+        <div class="s4-pill-note">★ YELLOW = confirmed, active on Omuni and ready to activate on Blinkit</div>
+      </div>
+
+      <div class="s4-infra reveal d5">
+        <div class="s4-infra-item">
+          <div class="s4-infra-dot"></div>
+          <div class="s4-infra-text"><strong>Live POS Sync</strong>Inventory refresh every 30 seconds from brand stores</div>
+        </div>
+        <div class="s4-infra-item">
+          <div class="s4-infra-dot"></div>
+          <div class="s4-infra-text"><strong>Smart Order Routing</strong>Nearest store with live stock, selected in milliseconds</div>
+        </div>
+        <div class="s4-infra-item">
+          <div class="s4-infra-dot"></div>
+          <div class="s4-infra-text"><strong>Store Pick-list App</strong>Guided pick &amp; pack workflow for store staff, built and tested</div>
+        </div>
+        <div class="s4-infra-item">
+          <div class="s4-infra-dot"></div>
+          <div class="s4-infra-text"><strong>Returns Automation</strong>Return routing back to store inventory, SPF auto-reconciled</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 5: ORDER FLOW ════════════════════════════════ -->
+  <div class="slide" id="s5">
+    <div style="display:flex;flex-direction:column;width:100%;height:100%;">
+      <div class="slide-header">
+        <span class="slide-num reveal d1">04</span>
+        <h2 class="slide-title reveal d1">HOW AN ORDER <span>FLOWS</span></h2>
+      </div>
+      <div class="slide-sub reveal d2">From Blinkit app to customer doorstep — in under 60 minutes</div>
+
+      <div class="s5-flow">
+
+        <div class="s5-step reveal d2">
+          <div class="s5-circle yellow">
+            <div class="s5-sn">01</div>
+            <div class="s5-icon">👁</div>
+          </div>
+          <div class="s5-connector"></div>
+          <div class="s5-name">Blinkit Reads Live Inventory</div>
+          <div class="s5-desc">Blinkit reads real-time stock from all mapped brand stores via Omuni's inventory API — before the customer even searches.</div>
+        </div>
+
+        <div class="s5-step reveal d3">
+          <div class="s5-circle dark">
+            <div class="s5-sn">02</div>
+            <div class="s5-icon">🛒</div>
+          </div>
+          <div class="s5-connector"></div>
+          <div class="s5-name">Customer Orders on Blinkit</div>
+          <div class="s5-desc">Blinkit takes the order and places it on Omuni via API. Stock is confirmed live — zero cancellation risk from stale inventory.</div>
+        </div>
+
+        <div class="s5-step reveal d4">
+          <div class="s5-circle dark">
+            <div class="s5-sn">03</div>
+            <div class="s5-icon">⚡</div>
+          </div>
+          <div class="s5-connector"></div>
+          <div class="s5-name">Omuni Decides the Store</div>
+          <div class="s5-desc">Omuni selects the nearest store with live stock and places a priority pick order on the store app — in milliseconds.</div>
+        </div>
+
+        <div class="s5-step reveal d5">
+          <div class="s5-circle dark">
+            <div class="s5-sn">04</div>
+            <div class="s5-icon">📦</div>
+          </div>
+          <div class="s5-connector"></div>
+          <div class="s5-name">Store Picks &amp; Packs</div>
+          <div class="s5-desc">Store staff gets a push notification and guided pick-list. Order packed and ready for pickup in under 10 minutes.</div>
+        </div>
+
+        <div class="s5-step reveal d6">
+          <div class="s5-circle green">
+            <div class="s5-sn">05</div>
+            <div class="s5-icon">🛵</div>
+          </div>
+          <div class="s5-name">SR Hyperlocal Delivers</div>
+          <div class="s5-desc">Shiprocket Hyperlocal rider picks from the store and delivers to the customer — within 60 minutes, end to end.</div>
+        </div>
+
+      </div>
+
+      <div class="s5-sla reveal d7">
+        <div class="s5-sla-box">
+          <div class="s5-sla-val">95%+</div>
+          <div class="s5-sla-label"><strong>Fill Rate</strong>Live sync, no stale stock</div>
+        </div>
+        <div class="s5-sla-box">
+          <div class="s5-sla-val">&lt;10 min</div>
+          <div class="s5-sla-label"><strong>Pick Time</strong>Guided store app workflow</div>
+        </div>
+        <div class="s5-sla-box">
+          <div class="s5-sla-val">60 min</div>
+          <div class="s5-sla-label"><strong>End-to-End</strong>Store to customer doorstep</div>
+        </div>
+        <div class="s5-sla-box">
+          <div class="s5-sla-val">&lt;5%</div>
+          <div class="s5-sla-label"><strong>Cancellation Rate</strong>Target from Day 1</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 6: WHAT BLINKIT GETS ════════════════════════ -->
+  <div class="slide" id="s6">
+    <div style="display:flex;flex-direction:column;width:100%;height:100%;">
+      <div class="slide-header">
+        <span class="slide-num reveal d1">05</span>
+        <h2 class="slide-title reveal d1">WHAT BLINKIT <span>GETS</span></h2>
+      </div>
+      <div class="s6-body">
+
+        <div class="s6-card featured reveal d2">
+          <div class="s6-eye">Competitive Position</div>
+          <div class="s6-head">FIRST MOVER IN FASHION Q-COMM</div>
+          <div class="s6-sub">Own the category before anyone else can</div>
+          <ul class="s6-bullets">
+            <li><div class="s6-bullet-dot"></div>No other q-comm platform has a working fashion supply chain at scale</li>
+            <li><div class="s6-bullet-dot"></div>Zepto and Swiggy cannot replicate real-time brand store inventory for 12+ months</li>
+            <li><div class="s6-bullet-dot"></div>Blinkit announces "Fashion in 60 minutes" — a category no one else offers</li>
+            <li><div class="s6-bullet-dot"></div>High-intent fashion buyers currently leaving Blinkit go to Myntra — this brings them back</li>
+          </ul>
+        </div>
+
+        <div class="s6-card reveal d3">
+          <div class="s6-eye">Operational Model</div>
+          <div class="s6-head">ZERO NEW SUPPLY OPS</div>
+          <div class="s6-sub">Pure upside with no operational overhead</div>
+          <ul class="s6-bullets">
+            <li><div class="s6-bullet-dot"></div>Omuni manages all brand onboarding, catalogue, and inventory sync</li>
+            <li><div class="s6-bullet-dot"></div>Shiprocket Hyperlocal manages the entire last-mile logistics layer</li>
+            <li><div class="s6-bullet-dot"></div>Blinkit surfaces the products and collects platform commission</li>
+            <li><div class="s6-bullet-dot"></div>No dark store space used. No buying team needed. No returns ops.</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 7: WHY NOW ═══════════════════════════════════ -->
+  <div class="slide" id="s7">
+    <div style="display:flex;flex-direction:column;width:100%;height:100%;">
+      <div class="slide-header">
+        <span class="slide-num reveal d1">06</span>
+        <h2 class="slide-title reveal d1">WHY OMUNI. <span>WHY NOW.</span></h2>
+      </div>
+      <div class="s7-grid">
+        <div class="s7-item reveal d2">
+          <div class="s7-check">✓</div>
+          <div>
+            <div class="s7-title">Real-time POS sync — live today</div>
+            <div class="s7-body">Not a roadmap. 5,000+ stores already synced. Inventory data available on request before the meeting ends.</div>
+          </div>
+        </div>
+        <div class="s7-item reveal d2">
+          <div class="s7-check">✓</div>
+          <div>
+            <div class="s7-title">No dark store space consumed</div>
+            <div class="s7-body">Fashion fulfilment happens from brand stores. Blinkit's dark store footprint stays fully dedicated to core grocery categories.</div>
+          </div>
+        </div>
+        <div class="s7-item reveal d3">
+          <div class="s7-check">✓</div>
+          <div>
+            <div class="s7-title">Returns are solved at source</div>
+            <div class="s7-body">Returns go back to the brand store — the natural home for fashion returns. Omuni automates routing and reconciliation end-to-end.</div>
+          </div>
+        </div>
+        <div class="s7-item reveal d3">
+          <div class="s7-check">✓</div>
+          <div>
+            <div class="s7-title">Omuni manages brand onboarding</div>
+            <div class="s7-body">Blinkit plugs into one Omuni API. We onboard the brands, manage catalogue, sync inventory, handle returns. Zero ops burden on Blinkit.</div>
+          </div>
+        </div>
+        <div class="s7-item reveal d4">
+          <div class="s7-check">✓</div>
+          <div>
+            <div class="s7-title">Shiprocket Hyperlocal is the last mile</div>
+            <div class="s7-body">35+ warehouses and hyperlocal fleet already covering all metros. The logistics infrastructure exists and is operational today.</div>
+          </div>
+        </div>
+        <div class="s7-item reveal d4">
+          <div class="s7-check">✓</div>
+          <div>
+            <div class="s7-title">We move at q-comm speed</div>
+            <div class="s7-body">Omuni + Shiprocket committed to 6-week integration from green light. Brands like Levi's, Bata, and Blackberrys are waiting.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 8: NEXT STEPS ════════════════════════════════ -->
+  <div class="slide" id="s8">
+    <div class="s8-left">
+      <div class="s8-bg-txt fade d7">NOW</div>
+      <div class="s8-eye reveal d1">Omuni × Shiprocket · 2025</div>
+      <div class="s8-hl reveal d2">LET'S BUILD FASHION ON BLINKIT —</div>
+      <div class="s8-hl reveal d3" style="font-style:italic;font-size:58px;margin-bottom:28px;">together.</div>
+      <div class="s8-tag reveal d4">5,000+ stores. Top fashion brands. Infrastructure that's live. All we need is a green light.</div>
+      <div class="s8-credit reveal d5">OMUNI × SHIPROCKET &nbsp;·&nbsp; CONFIDENTIAL</div>
+    </div>
+    <div class="s8-right">
+      <div class="s8-next-lbl reveal d2">NEXT STEPS</div>
+      <div class="s8-step reveal d3">
+        <div class="s8-num">1</div>
+        <div>
+          <div class="s8-step-title">Green light from Blinkit</div>
+          <div class="s8-step-body">A nod from the CRO kicks off the clock. Omuni and Shiprocket teams are aligned and on standby.</div>
+        </div>
+      </div>
+      <div class="s8-step reveal d4">
+        <div class="s8-num">2</div>
+        <div>
+          <div class="s8-step-title">ETxh flow discussion with Blinkit Tech</div>
+          <div class="s8-step-body">Deep-dive with Blinkit's tech team on the inventory read API, order placement flow, and webhook architecture. Spec aligned within 1 week.</div>
+        </div>
+      </div>
+      <div class="s8-step reveal d5">
+        <div class="s8-num">3</div>
+        <div>
+          <div class="s8-step-title">Integration sprint — 6 weeks</div>
+          <div class="s8-step-body">Omuni builds the Blinkit channel connector. Brands activated on the integration. Store staff training runs in parallel.</div>
+        </div>
+      </div>
+      <div class="s8-step reveal d6">
+        <div class="s8-num">4</div>
+        <div>
+          <div class="s8-step-title">Pilot launch — Mumbai, Delhi, Bengaluru</div>
+          <div class="s8-step-body">Simultaneous 3-city launch with Levi's, Blackberrys, Bata, USPA + more. 60-day data review with full metrics.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SLIDE 9: THANK YOU ═════════════════════════════════ -->
+  <div class="slide" id="s9">
+    <div class="s9-ring r1 fade d1"></div>
+    <div class="s9-ring r2 fade d2"></div>
+    <div class="s9-ring r3 fade d3"></div>
+    <div class="s9-ring r4 fade d4"></div>
+    <div class="s9-center">
+      <div class="s9-small reveal d1">Omuni × Shiprocket · Confidential 2025</div>
+      <div class="s9-big reveal d2">THANK<br><span>YOU.</span></div>
+      <div class="s9-sub reveal d3">We're excited about what fashion on Blinkit can become. Let's make it happen.</div>
+      <div class="s9-contacts reveal d4">
+        <div class="s9-contact">
+          <div class="s9-contact-role">Omuni · Business</div>
+          <div class="s9-contact-name">Omuni BD Team</div>
+          <div class="s9-contact-info">omuni.com</div>
+        </div>
+        <div class="s9-divider"></div>
+        <div class="s9-contact">
+          <div class="s9-contact-role">Shiprocket · Partnerships</div>
+          <div class="s9-contact-name">Shiprocket Team</div>
+          <div class="s9-contact-info">shiprocket.in</div>
+        </div>
+      </div>
+    </div>
+    <div class="s9-bar reveal d5"></div>
+  </div>
+
+</div><!-- /deck -->
+
+<button class="nav-btn" id="nav-prev">&#8592;</button>
+<button class="nav-btn" id="nav-next">&#8594;</button>
+<div id="dots"></div>
+<div id="counter">1 / 9</div>
+<div id="hint">← → ARROW KEYS &nbsp;·&nbsp; SPACE</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const TOTAL = slides.length;
+  let cur = 0, busy = false;
+
+  // Cursor
+  const cur_el = document.getElementById('cursor');
+  document.addEventListener('mousemove', e => { cur_el.style.left = e.clientX+'px'; cur_el.style.top = e.clientY+'px'; });
+  document.addEventListener('mousedown', () => cur_el.classList.add('big'));
+  document.addEventListener('mouseup', () => cur_el.classList.remove('big'));
+
+  // Dots
+  const dotsWrap = document.getElementById('dots');
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => goTo(i));
+    dotsWrap.appendChild(d);
+  });
+
+  function updateUI() {
+    document.getElementById('progress').style.width = ((cur+1)/TOTAL*100)+'%';
+    document.getElementById('counter').textContent = (cur+1)+' / '+TOTAL;
+    document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i === cur));
+  }
+
+  function goTo(idx) {
+    if (busy || idx === cur || idx < 0 || idx >= TOTAL) return;
+    busy = true;
+    const ov = document.getElementById('transition-overlay');
+    ov.style.transition = 'transform 0.28s cubic-bezier(0.4,0,0.2,1)';
+    ov.style.transformOrigin = 'left';
+    ov.style.transform = 'scaleX(1)';
+    setTimeout(() => {
+      slides[cur].classList.remove('active');
+      cur = idx;
+      slides[cur].classList.add('active');
+      updateUI();
+      ov.style.transition = 'transform 0.32s cubic-bezier(0.4,0,0.2,1)';
+      ov.style.transformOrigin = 'right';
+      ov.style.transform = 'scaleX(0)';
+      setTimeout(() => { ov.style.transformOrigin = 'left'; busy = false; }, 340);
+    }, 295);
+  }
+
+  document.getElementById('nav-next').addEventListener('click', () => goTo(cur+1));
+  document.getElementById('nav-prev').addEventListener('click', () => goTo(cur-1));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goTo(cur+1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(cur-1); }
+  });
+  let tx = 0;
+  document.addEventListener('touchstart', e => tx = e.touches[0].clientX);
+  document.addEventListener('touchend', e => { const d = e.changedTouches[0].clientX - tx; if (Math.abs(d) > 50) d < 0 ? goTo(cur+1) : goTo(cur-1); });
+
+  const hint = document.getElementById('hint');
+  setTimeout(() => hint.classList.add('hidden'), 4000);
+
+  updateUI();
+</script>
+</body>
+</html>
