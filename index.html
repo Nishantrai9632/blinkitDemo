@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Everything delivered in minutes | Blinkit</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,9 +17,20 @@
         <a href="#" class="logo" aria-label="Blinkit home">
           <span class="logo__blink">blink</span><span class="logo__it">it</span>
         </a>
-        <button type="button" class="location" id="locationBtn">
+        <button type="button" class="location location--header-slab" id="locationBtn">
           <span class="location__line1" id="locationDeliveryLine">Delivery in 19 minutes</span>
           <span class="location__line2">158, General KS Thimayya Rd, S… <svg class="location__chev" width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        </button>
+        <button
+          type="button"
+          class="header__menu-btn"
+          id="headerMenuBtn"
+          aria-label="Open menu"
+          aria-expanded="false"
+          aria-controls="headerNavPanel"
+        >
+          <svg class="header__menu-icon-open" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <svg class="header__menu-icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
       <div class="header__search-wrap">
@@ -28,17 +39,16 @@
           <input type="search" class="search__input" id="searchInput" placeholder='Search "sugar"' autocomplete="off" />
           <button type="button" class="search__clear" id="searchClear" hidden aria-label="Clear search">×</button>
         </div>
+        <button type="button" class="nav-cart nav-cart--mobile" id="cartToggleMobile" aria-expanded="false" aria-controls="cartDrawer">
+          <svg class="nav-cart__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 22a1 1 0 100-2 1 1 0 000 2zm10 0a1 1 0 100-2 1 1 0 000 2zM1 2h2l.6 3M5 2h15l-2 11H7L5 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="nav-cart__text">
+            <span class="nav-cart__line1" id="cartHeaderLine1Mobile">0 items</span>
+            <span class="nav-cart__line2" id="cartHeaderLine2Mobile">₹0</span>
+          </span>
+        </button>
       </div>
-      <nav class="header__nav">
-        <div class="omuni-toggle-wrap omuni-toggle-wrap--solo" id="omuniToggleWrap">
-          <label class="omuni-toggle-label omuni-toggle-label--solo" for="omuniToggle">
-            <span class="omuni-toggle">
-              <input type="checkbox" id="omuniToggle" class="omuni-toggle__input" aria-label="Enable stock from nearby stores" />
-              <span class="omuni-toggle__slider" aria-hidden="true"></span>
-            </span>
-          </label>
-        </div>
-        <a class="nav-fulfillment-cta" href="omuni-store/index.html" id="storeFulfillmentCta">Store fulfillment</a>
+      <nav class="header__nav" id="headerNavPanel" aria-label="Account and cart">
+        <a class="nav-fulfillment-cta" href="omuni-store/index.html" id="storeFulfillmentCta">How to Fulfill</a>
         <button
           type="button"
           class="nav-benefits"
@@ -83,15 +93,16 @@
         </button>
       </nav>
     </div>
+    <div class="header__menu-backdrop" id="headerMenuBackdrop" hidden aria-hidden="true"></div>
   </header>
 
   <main class="page-main">
     <section class="hero-banner">
       <div class="hero-banner__inner">
         <div class="hero-banner__copy" id="omuniSlideHero">
-          <h1 class="hero-banner__title" id="heroBannerTitle">Stock up on daily essentials</h1>
-          <p class="hero-banner__sub" id="heroBannerSub">Get farm-fresh goodness &amp; a range of exotic fruits, vegetables, eggs &amp; more.</p>
-          <a href="#" class="hero-banner__cta">Shop Now</a>
+          <h1 class="hero-banner__title" id="heroBannerTitle">Lifestyle &amp; Apparel, delivered fast</h1>
+          <p class="hero-banner__sub" id="heroBannerSub">Stock up on everyday styles, innerwear, activewear &amp; accessories — right to your door.</p>
+          <a href="lifestyle-apparels.html" class="hero-banner__cta">Shop Now</a>
         </div>
         <div class="hero-banner__art" aria-hidden="true">
           <div class="hero-banner__grocs"></div>
@@ -277,12 +288,6 @@
             <div class="product-card__action" data-action-root></div>
           </div>
         </article>
-      </div>
-    </section>
-    <section class="omuni-ops-strip" id="omuniSlideOps" aria-live="polite">
-      <div class="omuni-ops-strip__inner">
-        <p class="omuni-ops-strip__line" id="omuniOpsLine1">Fulfilment: standard dark-store SLA. Fashion: limited brand depth &amp; slower refresh.</p>
-        <p class="omuni-ops-strip__line omuni-ops-strip__line--sub" id="omuniOpsLine2">Inventory signals: batch updates · cancellations elevated on stockouts.</p>
       </div>
     </section>
   </main>

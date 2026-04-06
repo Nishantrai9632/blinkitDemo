@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Lifestyle &amp; Apparels | Blinkit</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,9 +17,20 @@
         <a href="index.html" class="logo" aria-label="Blinkit home">
           <span class="logo__blink">blink</span><span class="logo__it">it</span>
         </a>
-        <button type="button" class="location" id="locationBtn">
+        <button type="button" class="location location--header-slab" id="locationBtn">
           <span class="location__line1" id="locationDeliveryLine">Delivery in 19 minutes</span>
           <span class="location__line2">158, General KS Thimayya Rd, S… <svg class="location__chev" width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        </button>
+        <button
+          type="button"
+          class="header__menu-btn"
+          id="headerMenuBtn"
+          aria-label="Open menu"
+          aria-expanded="false"
+          aria-controls="headerNavPanel"
+        >
+          <svg class="header__menu-icon-open" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <svg class="header__menu-icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
       <div class="header__search-wrap">
@@ -28,8 +39,15 @@
           <input type="search" class="search__input" id="searchInput" placeholder='Search "sugar"' autocomplete="off" />
           <button type="button" class="search__clear" id="searchClear" hidden aria-label="Clear search">×</button>
         </div>
+        <button type="button" class="nav-cart nav-cart--mobile" id="cartToggleMobile" aria-expanded="false" aria-controls="cartDrawer">
+          <svg class="nav-cart__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 22a1 1 0 100-2 1 1 0 000 2zm10 0a1 1 0 100-2 1 1 0 000 2zM1 2h2l.6 3M5 2h15l-2 11H7L5 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="nav-cart__text">
+            <span class="nav-cart__line1" id="cartHeaderLine1Mobile">0 items</span>
+            <span class="nav-cart__line2" id="cartHeaderLine2Mobile">₹0</span>
+          </span>
+        </button>
       </div>
-      <nav class="header__nav">
+      <nav class="header__nav" id="headerNavPanel" aria-label="Account and cart">
         <a class="nav-fulfillment-cta" href="omuni-store/index.html" id="storeFulfillmentCta">How to Fulfill</a>
         <button
           type="button"
@@ -75,6 +93,7 @@
         </button>
       </nav>
     </div>
+    <div class="header__menu-backdrop" id="headerMenuBackdrop" hidden aria-hidden="true"></div>
   </header>
 
   <main class="page-main page-main--lifestyle">
@@ -95,14 +114,9 @@
               </label>
             </div>
           </div>
-          <p class="network-health__mode" id="networkHealthModeText"></p>
         </header>
-        <div class="network-health__tabs" role="tablist" aria-label="Network health views">
-          <button type="button" class="network-health__tab network-health__tab--active" role="tab" aria-selected="true" id="networkHealthTabFootprint" aria-controls="networkHealthPanelFootprint" data-network-health-tab="footprint">Store footprint</button>
-          <button type="button" class="network-health__tab" role="tab" aria-selected="false" id="networkHealthTabConversion" aria-controls="networkHealthPanelConversion" data-network-health-tab="conversion">Order conversion</button>
-        </div>
         <div class="network-health__panels">
-          <div id="networkHealthPanelFootprint" class="network-health__panel" role="tabpanel" aria-labelledby="networkHealthTabFootprint">
+          <div id="networkHealthPanelFootprint" class="network-health__panel">
             <div class="network-health__cluster" id="networkHealthClusterOff" data-network-state="off">
               <p class="network-health__cluster-label">Darkstore only — no nearby brand-store inventory</p>
               <ul class="network-health__stats">
@@ -140,23 +154,6 @@
                   <span class="network-health__stat-label">Network inventory (SKUs on dashboard)</span>
                 </li>
               </ul>
-            </div>
-          </div>
-          <div id="networkHealthPanelConversion" class="network-health__panel" role="tabpanel" aria-labelledby="networkHealthTabConversion" hidden>
-            <div class="network-health__cluster" id="networkHealthConvOff" data-network-state="off">
-              <p class="network-health__cluster-label">Style depth — darkstore assortment</p>
-              <div class="network-health__conversion">
-                <span class="network-health__conversion-kpi" id="networkHealthConvRateOff">~2.4%</span>
-                <p class="network-health__conversion-desc">Illustrative order conversion when customers see limited size / style options (single-lane inventory).</p>
-              </div>
-            </div>
-            <div class="network-health__cluster" id="networkHealthConvOn" hidden data-network-state="on">
-              <p class="network-health__cluster-label">Style depth — Omuni network</p>
-              <div class="network-health__conversion network-health__conversion--lift">
-                <span class="network-health__conversion-kpi" id="networkHealthConvLift">+14%</span>
-                <p class="network-health__conversion-desc">Lift in order conversion when multiple styles &amp; sizes are in stock from partner stores vs darkstore-only fashion (demo benchmark).</p>
-                <p class="network-health__conversion-note" id="networkHealthConvRateOn">Blended conversion ~3.1% vs ~2.4% baseline on comparable categories.</p>
-              </div>
             </div>
           </div>
         </div>
@@ -197,19 +194,6 @@
         </div>
 
         <div class="lifestyle-filter-dd">
-          <button type="button" class="lifestyle-filter-pill" id="lifestyleTriggerGender" aria-expanded="false" aria-haspopup="listbox" aria-controls="lifestylePanelGender">
-            <span>Gender</span>
-            <svg class="lifestyle-filter-pill__chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          </button>
-          <div class="lifestyle-filter-panel" id="lifestylePanelGender" role="listbox" hidden>
-            <button type="button" class="lifestyle-filter-option lifestyle-filter-option--active" role="option" data-gender-filter="all" aria-selected="true">All</button>
-            <button type="button" class="lifestyle-filter-option" role="option" data-gender-filter="Men" aria-selected="false">Men</button>
-            <button type="button" class="lifestyle-filter-option" role="option" data-gender-filter="Women" aria-selected="false">Women</button>
-            <button type="button" class="lifestyle-filter-option" role="option" data-gender-filter="Unisex" aria-selected="false">Unisex</button>
-          </div>
-        </div>
-
-        <div class="lifestyle-filter-dd">
           <button type="button" class="lifestyle-filter-pill" id="lifestyleTriggerBrand" aria-expanded="false" aria-haspopup="listbox" aria-controls="lifestylePanelBrand">
             <span>Brand</span>
             <svg class="lifestyle-filter-pill__chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -228,26 +212,6 @@
             <button type="button" class="lifestyle-filter-option" role="option" data-brand-filter="Jack &amp; Jones" aria-selected="false">Jack &amp; Jones</button>
             <button type="button" class="lifestyle-filter-option" role="option" data-brand-filter="Levi" aria-selected="false">Levi</button>
             <button type="button" class="lifestyle-filter-option" role="option" data-brand-filter="Bewakoof" aria-selected="false">Bewakoof</button>
-          </div>
-        </div>
-
-        <div class="lifestyle-filter-dd">
-          <button type="button" class="lifestyle-filter-pill" id="lifestyleTriggerSize" aria-expanded="false" aria-haspopup="listbox" aria-controls="lifestylePanelSize">
-            <span>Size</span>
-            <svg class="lifestyle-filter-pill__chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          </button>
-          <div class="lifestyle-filter-panel" id="lifestylePanelSize" role="listbox" hidden>
-            <button type="button" class="lifestyle-filter-option lifestyle-filter-option--active" role="option" data-size-filter="all" aria-selected="true">All sizes</button>
-            <button type="button" class="lifestyle-filter-option" role="option" data-size-filter="S" aria-selected="false">S</button>
-            <button type="button" class="lifestyle-filter-option" role="option" data-size-filter="M" aria-selected="false">M</button>
-            <button type="button" class="lifestyle-filter-option" role="option" data-size-filter="L" aria-selected="false">L</button>
-            <button type="button" class="lifestyle-filter-option" role="option" data-size-filter="XL" aria-selected="false">XL</button>
-            <button type="button" class="lifestyle-filter-option" role="option" data-size-filter="XXL" aria-selected="false">XXL</button>
-            <button type="button" class="lifestyle-filter-option" role="option" data-size-filter="7" aria-selected="false">7 (UK)</button>
-            <button type="button" class="lifestyle-filter-option" role="option" data-size-filter="8" aria-selected="false">8 (UK)</button>
-            <button type="button" class="lifestyle-filter-option" role="option" data-size-filter="9" aria-selected="false">9 (UK)</button>
-            <button type="button" class="lifestyle-filter-option" role="option" data-size-filter="10" aria-selected="false">10 (UK)</button>
-            <button type="button" class="lifestyle-filter-option" role="option" data-size-filter="11" aria-selected="false">11 (UK)</button>
           </div>
         </div>
 

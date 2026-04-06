@@ -59,47 +59,6 @@
     var onCluster = document.getElementById("networkHealthClusterOn");
     if (offCluster) offCluster.hidden = on;
     if (onCluster) onCluster.hidden = !on;
-
-    var convOff = document.getElementById("networkHealthConvOff");
-    var convOn = document.getElementById("networkHealthConvOn");
-    if (convOff) convOff.hidden = on;
-    if (convOn) convOn.hidden = !on;
-
-    var mode = document.getElementById("networkHealthModeText");
-    if (mode) {
-      mode.textContent = on
-        ? "Combined network: darkstores + brand stores — inventory reflects Omuni (darkstore + store) catalogue on this dashboard."
-        : "Darkstore network only — inventory count reflects products available on this dashboard without nearby brand-store stock.";
-    }
-  }
-
-  function activateTab(which) {
-    var foot = which === "footprint";
-    var tabF = document.getElementById("networkHealthTabFootprint");
-    var tabC = document.getElementById("networkHealthTabConversion");
-    var panF = document.getElementById("networkHealthPanelFootprint");
-    var panC = document.getElementById("networkHealthPanelConversion");
-    if (tabF) {
-      tabF.classList.toggle("network-health__tab--active", foot);
-      tabF.setAttribute("aria-selected", foot ? "true" : "false");
-    }
-    if (tabC) {
-      tabC.classList.toggle("network-health__tab--active", !foot);
-      tabC.setAttribute("aria-selected", !foot ? "true" : "false");
-    }
-    if (panF) panF.hidden = !foot;
-    if (panC) panC.hidden = foot;
-  }
-
-  function initTabs() {
-    var list = document.querySelector(".network-health__tabs");
-    if (!list) return;
-    list.addEventListener("click", function (e) {
-      var btn = e.target.closest("[data-network-health-tab]");
-      if (!btn) return;
-      var which = btn.getAttribute("data-network-health-tab");
-      if (which === "footprint" || which === "conversion") activateTab(which);
-    });
   }
 
   function refresh() {
@@ -108,7 +67,6 @@
   }
 
   function boot() {
-    initTabs();
     refresh();
     document.addEventListener("omuni:state-changed", function () {
       syncOmuniClusters();

@@ -10,8 +10,6 @@
   var lifestyleFiltersRoot = document.getElementById("lifestyleFilters");
   var lifestyleSortEl = document.getElementById("lifestyleSort");
   var lifestyleBrandFilter = "all";
-  var lifestyleGenderFilter = "all";
-  var lifestyleSizeFilter = "all";
   var lifestyleTypeFilter = "all";
 
   var searchInput = document.getElementById("searchInput");
@@ -19,8 +17,11 @@
   var searchResultsTitle = document.getElementById("searchResultsTitle");
 
   var cartToggle = document.getElementById("cartToggle");
+  var cartToggleMobile = document.getElementById("cartToggleMobile");
   var cartHeaderLine1 = document.getElementById("cartHeaderLine1");
   var cartHeaderLine2 = document.getElementById("cartHeaderLine2");
+  var cartHeaderLine1Mobile = document.getElementById("cartHeaderLine1Mobile");
+  var cartHeaderLine2Mobile = document.getElementById("cartHeaderLine2Mobile");
   var cartDrawer = document.getElementById("cartDrawer");
   var cartBackdrop = document.getElementById("cartBackdrop");
   var cartClose = document.getElementById("cartClose");
@@ -68,6 +69,69 @@
   var navAccountWrap = document.getElementById("navAccountWrap");
   var navAccountBtn = document.getElementById("navAccountBtn");
   var navAccountDropdown = document.getElementById("navAccountDropdown");
+  var headerMenuBtn = document.getElementById("headerMenuBtn");
+  var headerMenuBackdrop = document.getElementById("headerMenuBackdrop");
+
+  function closeHeaderMenu() {
+    if (!document.body.classList.contains("header--menu-open")) return;
+    document.body.classList.remove("header--menu-open");
+    if (headerMenuBtn) {
+      headerMenuBtn.setAttribute("aria-expanded", "false");
+      headerMenuBtn.setAttribute("aria-label", "Open menu");
+    }
+    if (headerMenuBackdrop) {
+      headerMenuBackdrop.hidden = true;
+      headerMenuBackdrop.setAttribute("aria-hidden", "true");
+    }
+  }
+
+  function openHeaderMenu() {
+    document.body.classList.add("header--menu-open");
+    if (headerMenuBtn) {
+      headerMenuBtn.setAttribute("aria-expanded", "true");
+      headerMenuBtn.setAttribute("aria-label", "Close menu");
+    }
+    if (headerMenuBackdrop) {
+      headerMenuBackdrop.hidden = false;
+      headerMenuBackdrop.setAttribute("aria-hidden", "false");
+    }
+  }
+
+  function toggleHeaderMenu() {
+    if (document.body.classList.contains("header--menu-open")) closeHeaderMenu();
+    else openHeaderMenu();
+  }
+
+  if (headerMenuBtn) {
+    headerMenuBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      toggleHeaderMenu();
+    });
+  }
+
+  if (headerMenuBackdrop) {
+    headerMenuBackdrop.addEventListener("click", function () {
+      closeHeaderMenu();
+    });
+  }
+
+  var headerNavPanel = document.getElementById("headerNavPanel");
+  if (headerNavPanel) {
+    headerNavPanel.addEventListener("click", function (e) {
+      var link = e.target.closest("a[href]");
+      if (!link || link.closest(".nav-account-dropdown")) return;
+      var href = link.getAttribute("href") || "";
+      if (href !== "#" && href.indexOf("javascript:") !== 0) closeHeaderMenu();
+    });
+  }
+
+  window.addEventListener(
+    "resize",
+    function () {
+      if (window.innerWidth > 900) closeHeaderMenu();
+    },
+    { passive: true }
+  );
 
   function closeAccountDropdown() {
     if (!navAccountWrap || !navAccountDropdown || !navAccountBtn) return;
@@ -81,6 +145,15 @@
     navAccountWrap.classList.add("nav-account-wrap--open");
     navAccountDropdown.hidden = false;
     navAccountBtn.setAttribute("aria-expanded", "true");
+    if (headerNavPanel) {
+      window.setTimeout(function () {
+        try {
+          headerNavPanel.scrollTo({ top: Math.max(0, navAccountWrap.offsetTop - 8), behavior: "smooth" });
+        } catch (err) {
+          headerNavPanel.scrollTop = Math.max(0, navAccountWrap.offsetTop - 8);
+        }
+      }, 0);
+    }
   }
 
   function toggleAccountDropdown() {
@@ -159,6 +232,7 @@
 
   function openOmuniBenefits() {
     if (!omuniBenefitsSlide) return;
+    closeHeaderMenu();
     omuniBenefitsLastFocus = document.activeElement;
     omuniBenefitsSlide.removeAttribute("hidden");
     document.body.classList.add("omuni-benefits-active");
@@ -366,6 +440,8 @@
     var total = grandCartTotal();
     if (cartHeaderLine1) cartHeaderLine1.textContent = n === 1 ? "1 item" : n + " items";
     if (cartHeaderLine2) cartHeaderLine2.textContent = formatRupee(n > 0 ? total : 0);
+    if (cartHeaderLine1Mobile) cartHeaderLine1Mobile.textContent = n === 1 ? "1 item" : n + " items";
+    if (cartHeaderLine2Mobile) cartHeaderLine2Mobile.textContent = formatRupee(n > 0 ? total : 0);
   }
 
   function getVisibleProductCards() {
@@ -400,28 +476,20 @@
   function updateLifestyleFilterPillStates() {
     var sortT = document.getElementById("lifestyleTriggerSort");
     if (sortT) sortT.classList.toggle("lifestyle-filter-pill--dirty", !!(lifestyleSortEl && lifestyleSortEl.value !== "relevance"));
-    var gT = document.getElementById("lifestyleTriggerGender");
-    if (gT) gT.classList.toggle("lifestyle-filter-pill--dirty", lifestyleGenderFilter !== "all");
     var bT = document.getElementById("lifestyleTriggerBrand");
     if (bT) bT.classList.toggle("lifestyle-filter-pill--dirty", lifestyleBrandFilter !== "all");
-    var sT = document.getElementById("lifestyleTriggerSize");
-    if (sT) sT.classList.toggle("lifestyle-filter-pill--dirty", lifestyleSizeFilter !== "all");
     var tyT = document.getElementById("lifestyleTriggerType");
     if (tyT) tyT.classList.toggle("lifestyle-filter-pill--dirty", lifestyleTypeFilter !== "all");
   }
 
   function resetLifestyleFilters() {
-    lifestyleGenderFilter = "all";
     lifestyleBrandFilter = "all";
-    lifestyleSizeFilter = "all";
     lifestyleTypeFilter = "all";
     if (lifestyleSortEl) {
       lifestyleSortEl.value = "relevance";
     }
     markActiveInPanel(document.getElementById("lifestylePanelSort"), "data-sort-value", "relevance");
-    markActiveInPanel(document.getElementById("lifestylePanelGender"), "data-gender-filter", "all");
     markActiveInPanel(document.getElementById("lifestylePanelBrand"), "data-brand-filter", "all");
-    markActiveInPanel(document.getElementById("lifestylePanelSize"), "data-size-filter", "all");
     markActiveInPanel(document.getElementById("lifestylePanelType"), "data-type-filter", "all");
     updateLifestyleFilterPillStates();
   }
@@ -449,13 +517,9 @@
       var okSearch = !lower || name.indexOf(lower) !== -1;
       var b = card.getAttribute("data-brand") || "";
       var okBrand = lifestyleBrandFilter === "all" || b === lifestyleBrandFilter;
-      var g = card.getAttribute("data-gender") || "";
-      var okGender = lifestyleGenderFilter === "all" || g === lifestyleGenderFilter;
-      var sz = card.getAttribute("data-size") || "";
-      var okSize = lifestyleSizeFilter === "all" || sz === lifestyleSizeFilter;
       var ty = card.getAttribute("data-type") || "";
       var okType = lifestyleTypeFilter === "all" || ty === lifestyleTypeFilter;
-      if (okSearch && okBrand && okGender && okSize && okType) {
+      if (okSearch && okBrand && okType) {
         match.push(card);
       } else {
         nomatch.push(card);
@@ -537,15 +601,9 @@
           var sv = opt.getAttribute("data-sort-value") || "relevance";
           if (lifestyleSortEl) lifestyleSortEl.value = sv;
           markActiveInPanel(panel, "data-sort-value", sv);
-        } else if (opt.hasAttribute("data-gender-filter")) {
-          lifestyleGenderFilter = opt.getAttribute("data-gender-filter") || "all";
-          markActiveInPanel(panel, "data-gender-filter", lifestyleGenderFilter);
         } else if (opt.hasAttribute("data-brand-filter")) {
           lifestyleBrandFilter = opt.getAttribute("data-brand-filter") || "all";
           markActiveInPanel(panel, "data-brand-filter", lifestyleBrandFilter);
-        } else if (opt.hasAttribute("data-size-filter")) {
-          lifestyleSizeFilter = opt.getAttribute("data-size-filter") || "all";
-          markActiveInPanel(panel, "data-size-filter", lifestyleSizeFilter);
         } else if (opt.hasAttribute("data-type-filter")) {
           lifestyleTypeFilter = opt.getAttribute("data-type-filter") || "all";
           markActiveInPanel(panel, "data-type-filter", lifestyleTypeFilter);
@@ -892,10 +950,12 @@
 
   function openCart() {
     if (!cartDrawer) return;
+    closeHeaderMenu();
     cartDrawer.hidden = false;
     cartDrawer.setAttribute("aria-hidden", "false");
     document.body.classList.add("cart-open");
     if (cartToggle) cartToggle.setAttribute("aria-expanded", "true");
+    if (cartToggleMobile) cartToggleMobile.setAttribute("aria-expanded", "true");
   }
 
   function closeCart() {
@@ -904,9 +964,11 @@
     cartDrawer.setAttribute("aria-hidden", "true");
     document.body.classList.remove("cart-open");
     if (cartToggle) cartToggle.setAttribute("aria-expanded", "false");
+    if (cartToggleMobile) cartToggleMobile.setAttribute("aria-expanded", "false");
   }
 
   if (cartToggle) cartToggle.addEventListener("click", openCart);
+  if (cartToggleMobile) cartToggleMobile.addEventListener("click", openCart);
   if (cartBackdrop) cartBackdrop.addEventListener("click", closeCart);
   if (cartClose) cartClose.addEventListener("click", closeCart);
 
@@ -1041,6 +1103,7 @@
 
   function openLocation() {
     if (!locationModal) return;
+    closeHeaderMenu();
     locationModal.hidden = false;
     document.body.style.overflow = "hidden";
   }
@@ -1073,6 +1136,10 @@
 
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape") return;
+    if (document.body.classList.contains("header--menu-open")) {
+      closeHeaderMenu();
+      return;
+    }
     if (navAccountWrap && navAccountWrap.classList.contains("nav-account-wrap--open")) {
       closeAccountDropdown();
       return;

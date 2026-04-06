@@ -11,9 +11,8 @@
   var COPY = {
     default: {
       locationLine: "Delivery in 19 minutes",
-      heroTitle: "Stock up on daily essentials",
-      heroSub:
-        "Get farm-fresh goodness & a range of exotic fruits, vegetables, eggs & more.",
+      heroTitle: "Lifestyle & Apparel, delivered fast",
+      heroSub: "Stock up on everyday styles, innerwear, activewear & accessories — right to your door.",
       productsNote:
         "Grocery ETAs reflect dark-store fulfilment. Fashion assortment is narrow on this lane.",
       apparelMeta: "Limited SKUs",
@@ -23,16 +22,11 @@
       promo2Sub: "Food, treats, toys & more.",
       promo3Title: "No time for a diaper run?",
       promo3Sub: "Get baby care essentials.",
-      ops1:
-        "Fulfilment: standard dark-store SLA. Fashion: limited brand depth & slower refresh.",
-      ops2:
-        "Inventory signals: batch updates · cancellations elevated on stockouts.",
     },
     omuni: {
       locationLine: "Delivery in 30 minutes",
-      heroTitle: "Stock up on daily essentials",
-      heroSub:
-        "Fashion available in under 30 mins via 5000+ stores — Bata, XYXX & more. Groceries still in minutes.",
+      heroTitle: "Lifestyle & Apparel, delivered in under 30 mins",
+      heroSub: "Shop 5000+ stores and 50+ brands — apparel delivered fast alongside your grocery basket.",
       productsNote:
         "Omuni: 5000+ stores, 50+ apparel brands — fashion in under 30 mins alongside your grocery basket.",
       apparelMeta: "5000+ stores · 50+ brands",
@@ -42,10 +36,6 @@
       promo2Sub: "Bata, XYXX & more — under 30 min apparel delivery.",
       promo3Title: "No time for a diaper run?",
       promo3Sub: "Baby care + apparel add-ons in one trip.",
-      ops1:
-        "Omuni: 95%+ fill rate · under 30 min apparel SLA from 5000+ partner stores.",
-      ops2:
-        "Real-time inventory visibility · cancellations down to ~3% vs baseline.",
     },
   };
 
@@ -241,8 +231,6 @@
     setText("promo2Sub", c.promo2Sub);
     setText("promo3Title", c.promo3Title);
     setText("promo3Sub", c.promo3Sub);
-    setText("omuniOpsLine1", c.ops1);
-    setText("omuniOpsLine2", c.ops2);
 
     var hero = $("omuniSlideHero");
     if (hero) {
