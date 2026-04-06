@@ -5,6 +5,171 @@
   var CLOCK_SVG =
     '<svg class="product-card__clock" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 
+  // Keep these URLs stable and re-use across categories (avoid broken / mismatched images).
+  var IMG_POOLS = {
+    footwear: [
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1528701800489-20be3c0ea6f5?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1523381294911-8d3cead13475?w=400&h=533&fit=crop&auto=format&q=80"
+    ],
+    tops: [
+      "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1520975661595-6453be3f7070?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=400&h=533&fit=crop&auto=format&q=80"
+    ],
+    outerwear: [
+      "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=533&fit=crop&auto=format&q=80"
+    ],
+    bottoms: [
+      "https://images.unsplash.com/photo-1520975661595-6453be3f7070?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=533&fit=crop&auto=format&q=80"
+    ],
+    innerwear: [
+      "https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?w=400&h=533&fit=crop&auto=format&q=80"
+    ],
+    bags: [
+      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=533&fit=crop&auto=format&q=80"
+    ],
+    accessories: [
+      "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=533&fit=crop&auto=format&q=80"
+    ],
+    ethnic: [
+      "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1618354691213-152f7b6a8d28?w=400&h=533&fit=crop&auto=format&q=80"
+    ]
+  };
+
+  var DEFAULT_IMG = IMG_POOLS.tops[0];
+
+  function hashStr(s) {
+    // Simple deterministic hash (stable across sessions, no crypto needed).
+    var str = String(s || "");
+    var h = 2166136261;
+    for (var i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = (h * 16777619) >>> 0;
+    }
+    return h >>> 0;
+  }
+
+  function pickFrom(pool, seed) {
+    if (!pool || !pool.length) return DEFAULT_IMG;
+    var idx = hashStr(seed) % pool.length;
+    return pool[idx];
+  }
+
+  function poolKeyForType(typeLabel) {
+    var t = String(typeLabel || "").toLowerCase().trim();
+    if (
+      t.indexOf("shoe") !== -1 ||
+      t.indexOf("sneaker") !== -1 ||
+      t.indexOf("boot") !== -1 ||
+      t.indexOf("sandal") !== -1 ||
+      t.indexOf("slipper") !== -1 ||
+      t.indexOf("chappal") !== -1 ||
+      t.indexOf("loafer") !== -1 ||
+      t.indexOf("oxford") !== -1 ||
+      t.indexOf("derb") !== -1 ||
+      t.indexOf("plimsoll") !== -1 ||
+      t.indexOf("floater") !== -1 ||
+      t.indexOf("slides") !== -1 ||
+      t.indexOf("closed") !== -1
+    ) {
+      return "footwear";
+    }
+    if (
+      t.indexOf("saree") !== -1 ||
+      t.indexOf("kurti") !== -1 ||
+      t.indexOf("kurta") !== -1 ||
+      t.indexOf("salwar") !== -1 ||
+      t.indexOf("dupatta") !== -1 ||
+      t.indexOf("ghagra") !== -1 ||
+      t.indexOf("choli") !== -1 ||
+      t.indexOf("blouse") !== -1 ||
+      t.indexOf("kaftan") !== -1 ||
+      t.indexOf("shawl") !== -1 ||
+      t.indexOf("petticoat") !== -1
+    ) {
+      return "ethnic";
+    }
+    if (
+      t.indexOf("bag") !== -1 ||
+      t.indexOf("hand bag") !== -1 ||
+      t.indexOf("tote") !== -1
+    ) {
+      return "bags";
+    }
+    if (
+      t.indexOf("belt") !== -1 ||
+      t.indexOf("tie") !== -1 ||
+      t.indexOf("cap") !== -1 ||
+      t.indexOf("wallet") !== -1 ||
+      t.indexOf("watch") !== -1 ||
+      t.indexOf("sunglass") !== -1 ||
+      t.indexOf("cufflink") !== -1 ||
+      t.indexOf("pocket square") !== -1 ||
+      t.indexOf("handkerchief") !== -1 ||
+      t.indexOf("scarf") !== -1 ||
+      t.indexOf("bandana") !== -1 ||
+      t.indexOf("perfume") !== -1 ||
+      t === "accessories"
+    ) {
+      return "accessories";
+    }
+    if (
+      t.indexOf("brief") !== -1 ||
+      t.indexOf("trunk") !== -1 ||
+      t.indexOf("boxer") !== -1 ||
+      t.indexOf("sock") !== -1 ||
+      t.indexOf("vest") !== -1 ||
+      t.indexOf("bra") !== -1 ||
+      t.indexOf("pyjama") !== -1 ||
+      t.indexOf("inner") !== -1
+    ) {
+      return "innerwear";
+    }
+    if (
+      t.indexOf("jacket") !== -1 ||
+      t.indexOf("hoodie") !== -1 ||
+      t.indexOf("blazer") !== -1 ||
+      t.indexOf("sweatshirt") !== -1 ||
+      t.indexOf("sweater") !== -1 ||
+      t.indexOf("pullover") !== -1 ||
+      t.indexOf("coat") !== -1 ||
+      t.indexOf("shrug") !== -1
+    ) {
+      return "outerwear";
+    }
+    if (
+      t.indexOf("jean") !== -1 ||
+      t.indexOf("trouser") !== -1 ||
+      t.indexOf("pant") !== -1 ||
+      t.indexOf("legging") !== -1 ||
+      t.indexOf("jogger") !== -1 ||
+      t.indexOf("short") !== -1 ||
+      t.indexOf("lower") !== -1 ||
+      t.indexOf("track") !== -1 ||
+      t.indexOf("tight") !== -1 ||
+      t.indexOf("plazo") !== -1 ||
+      t.indexOf("skirt") !== -1
+    ) {
+      return "bottoms";
+    }
+    // Default: tops (shirts / tees / dresses / etc.)
+    return "tops";
+  }
+
   function escAttr(s) {
     return String(s)
       .replace(/&/g, "&amp;")
@@ -37,10 +202,13 @@
     var id = escAttr(p.id);
     var brand = escAttr(p.brand);
     var name = escAttr(p.name);
-    var img = escAttr(p.img);
+    var typeRaw = p.type || "";
+    // Always derive image from category (type) so imagery stays consistent with filters.
+    var imgDerived = pickFrom(IMG_POOLS[poolKeyForType(typeRaw)], (p.id || "") + "|" + (p.brand || "") + "|" + typeRaw);
+    var img = escAttr(imgDerived);
     var off = p.off;
     var gender = escAttr(p.gender || "");
-    var typ = escAttr(p.type || "");
+    var typ = escAttr(typeRaw);
     var size = escAttr(p.size || "");
     return (
       '<article class="product-card product-card--apparel" data-id="' +
@@ -96,13 +264,70 @@
     );
   }
 
+  function isDefaultUnfilteredView() {
+    var brandSel = window.lifestyleBrandSelected && Object.keys(window.lifestyleBrandSelected).length;
+    var typeSel = window.lifestyleTypeSelected && Object.keys(window.lifestyleTypeSelected).length;
+    var delSel = window.lifestyleDeliverySelected && Object.keys(window.lifestyleDeliverySelected).length;
+    var q = "";
+    var inp = document.getElementById("searchInput");
+    if (inp && inp.value) q = String(inp.value).trim();
+    var sort = document.getElementById("lifestyleSort");
+    var sortMode = sort ? String(sort.value || "") : "";
+    return !brandSel && !typeSel && !delSel && !q && (!sortMode || sortMode === "relevance");
+  }
+
+  function interleaveByBrand(items) {
+    var byBrand = {};
+    for (var i = 0; i < items.length; i++) {
+      var p = items[i];
+      var b = (p && p.brand) || "";
+      if (!byBrand[b]) byBrand[b] = [];
+      byBrand[b].push(p);
+    }
+    var brandOrder =
+      (window.LIFESTYLE_FILTER_OPTIONS && window.LIFESTYLE_FILTER_OPTIONS.brands) || Object.keys(byBrand).sort();
+    var out = [];
+    var idx = 0;
+    var appended = true;
+    while (appended) {
+      appended = false;
+      for (var j = 0; j < brandOrder.length; j++) {
+        var b = brandOrder[j];
+        var arr = byBrand[b];
+        if (arr && idx < arr.length) {
+          out.push(arr[idx]);
+          appended = true;
+        }
+      }
+      idx++;
+    }
+    return out.length ? out : items;
+  }
+
   function render() {
     var grid = document.getElementById("gridLifestyle");
     var cat = window.LIFESTYLE_CATALOG;
     if (!grid || !cat || !cat.length) return;
-    var parts = new Array(cat.length);
-    for (var i = 0; i < cat.length; i++) parts[i] = buildCard(cat[i], i);
+    var items = cat;
+    if (isDefaultUnfilteredView()) {
+      items = interleaveByBrand(cat);
+    }
+    var parts = new Array(items.length);
+    for (var i = 0; i < items.length; i++) parts[i] = buildCard(items[i], i);
     grid.innerHTML = parts.join("");
+
+    // Ensure every card has a valid image even if a remote URL fails.
+    var imgs = grid.querySelectorAll("img.product-card__photo");
+    for (var j = 0; j < imgs.length; j++) {
+      imgs[j].addEventListener(
+        "error",
+        function () {
+          if (this && this.src !== DEFAULT_IMG) this.src = DEFAULT_IMG;
+        },
+        { once: true }
+      );
+    }
+
     if (typeof window.initProductCards === "function") {
       window.initProductCards();
     }

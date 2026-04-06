@@ -1,377 +1,45 @@
 #!/usr/bin/env python3
-"""Emit lifestyle-catalog.js with 1500 apparel products; 5 baseline IDs when toggle off."""
+"""Emit lifestyle-catalog.js from Brand_Category_Data.xlsx.
+
+Requirement: at least N products for every (brand × category/type) combination in the sheet.
+"""
+
 import hashlib
 import json
 import re
 from pathlib import Path
 
-# 12 brands × 125 = 1500
-TOTAL_PRODUCTS = 1500
-
-# Slugs that contribute to baseline in-stock; first 5 matching SKUs only (toggle off).
-BASELINE_SLUGS = frozenset({"jockey", "boldfit", "adidas", "pepe", "uspa"})
-
-# (display name, slug, name templates — cycled with index for uniqueness)
-ALL_BRANDS = [
-    ("Jockey", "jockey", [
-        "Cotton Vest Pack of 3", "Briefs Pack of 2", "Trunks Solid", "Ankle Socks Pack of 3",
-        "Ribbed Vest", "Boxer Briefs", "Thermal Top", "Loungewear Shorts", "Sports Socks",
-        "Crew Neck Tee", "Tank Top Pack", "Long Johns", "Gym Vest", "Printed Briefs",
-        "Classic Briefs", "Seamless Vest", "Low-rise Trunks", "Cotton Socks 6-pack",
-        "Track Pants", "Polo Tee", "Zip Hoodie Lite", "Essential Tee 2-pack",
-    ]),
-    ("Boldfit", "boldfit", [
-        "Quick Dry Hoodie", "Training Tee", "Compression Tights", "Gym Shorts", "Dryfit Polo",
-        "Yoga Mat Strap Tee", "Running Singlet", "Athletic Joggers", "Sports Cap", "Track Jacket",
-        "Mesh Tank", "Performance Shorts", "Zip Track Top", "Training Hoodie", "Dryfit Shorts",
-        "Muscle Tee", "Reflective Jacket", "Stretch Leggings", "Cricket Jersey", "Badminton Shorts",
-        "Training Vest", "Active Polo",
-    ]),
-    ("Adidas", "adidas", [
-        "Running Shoes", "Stan Smith Sneakers", "Ultraboost Lite", "Adilette Slides",
-        "Training Pants", "Trefoil Tee", "3-Stripes Track Top", "Football Jersey",
-        "Basketball Shorts", "Classic Cap", "Gym Duffel Tee", "Response Runner",
-        "Predator Cleats", "Essentials Hoodie", "Tiro Track Pants", "Squadra Jersey",
-        "Duramo Sandals", "Linear Tee", "Own the Run Tee", "Designed 2 Move Shorts",
-        "Prime Tee", "Essentials Polo",
-    ]),
-    ("Pepe Jeans", "pepe", [
-        "Slim Fit Shirt", "Slim Jeans", "Denim Jacket", "Chino Trousers", "Polo Pique",
-        "Graphic Tee", "Cargo Shorts", "Knit Sweater", "Longline Tee", "Skinny Jeans",
-        "Oxford Shirt", "Bomber Jacket", "Relaxed Tee", "Tapered Jeans", "Henley Top",
-        "Denim Shirt", "Hooded Sweatshirt", "Straight Jeans", "Stripe Polo",
-        "Lightweight Jacket", "Muscle Fit Tee", "Casual Blazer",
-    ]),
-    ("USPA", "uspa", [
-        "Solid Polo", "Oxford Shirt", "Chino Shorts", "Crew Sweatshirt", "Slim Chinos",
-        "Pique Tee", "Denim Shorts", "V-neck Pullover", "Stripe Polo", "Casual Shirt",
-        "Jogger Pants", "Half-zip Sweater", "Linen Shirt", "Cargo Pants", "Polo Dress Shirt",
-        "Lightweight Jacket", "Twill Trousers", "Rugby Shirt", "Essential Tee",
-        "Relaxed Shorts", "Zip Hoodie", "Classic Fit Jeans",
-    ]),
-    ("Bata", "bata", [
-        "Floaters", "Sandals", "School Shoes", "Comfort Slides", "Formal Shoes", "Sports Sandals",
-        "Leather Loafers", "Walking Shoes", "Canvas Sneakers", "Hiking Sandals", "Monk Straps",
-        "Derby Shoes", "Moccasins", "Boat Shoes", "Chelsea Boots", "Sneakers", "Boots",
-    ]),
-    ("Blackberry", "bb", [
-        "Slim Shirt", "Formal Shirt", "Casual Shirt", "Linen Shirt", "Printed Shirt",
-        "Denim Shirt", "Oxford", "Checks Shirt", "Stripe Shirt", "Party Shirt",
-        "Half Sleeve", "Full Sleeve", "Slim Fit", "Tailored Fit", "Spread Collar",
-    ]),
-    ("Tommy Hilfiger", "tommy", [
-        "Logo Tee", "Polo Flag", "Chinos", "Denim Jeans", "Hoodie Flag", "Cap", "Belt",
-        "Sweater", "Oxford Shirt", "Shorts", "Swim Shorts", "Puffer Vest", "Cardigan",
-        "Bomber", "Track Pants", "Polo", "Henley",
-    ]),
-    ("Calvin Klein", "ck", [
-        "Trunks Pack", "Boxer Briefs", "Cotton Tee", "Loungewear", "Hoodie CK", "Joggers",
-        "Socks Pack", "Tank 2-pack", "Pyjama Set", "Robe", "Briefs", "Long Sleeve Tee",
-        "Shorts", "Polo CK", "Cap", "Vest",
-    ]),
-    ("Jack & Jones", "jj", [
-        "Slim Jeans", "Bomber", "Graphic Tee", "Chinos", "Denim Jacket", "Hoodie", "Polo",
-        "Shorts", "Sweatshirt", "Parka", "Shirt", "Joggers", "Blazer", "Knit", "Tee",
-    ]),
-    ("Levi", "levi", [
-        "511 Jeans", "501 Original", "Trucker Jacket", "Graphic Tee", "Shorts", "Hoodie",
-        "Shirt", "502 Taper", "505 Regular", "Denim Shorts", "Sherpa", "Beanie", "Belt",
-        "Tank", "Polo", "Trucker",
-    ]),
-    ("Bewakoof", "bewakoof", [
-        "Graphic Tee", "Oversized Tee", "Joggers", "Hoodie", "Phone Pocket Tee", "Pyjama",
-        "Shorts", "Crop Top", "Bomber", "Shirt", "Sweatshirt", "Tank", "Cap", "Socks", "Slides",
-    ]),
-]
-
-IMG_POOL = [
-    "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1556906781-9a412961c28c?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1562157873-818bc0726f68?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1576871337622-98d48d1cf531?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1556906781-9a412961c28c?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1564257631407-4deb1f99d992?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1445205170230-053b83016050?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1479064555552-3ef4979f8908?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400&h=533&fit=crop&auto=format&q=80",
-]
-
-# Dress / oxford / loafer imagery — Bata only (verified HTTP 200; not sandals or slides).
-BATA_FORMAL_SHOE_IMG_POOL = [
-    "https://images.unsplash.com/photo-1563434194539-fcc823f9bf92?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1657034321685-1fba1b2751f3?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1576792741377-eb0f4f6d1a47?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1770198408387-7f45e5d6c056?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1773021370310-7fe0b80838ec?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1748341545593-12c86c6ab718?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1766113478661-4abfd38f3c02?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1772678144516-4fddf7635ab4?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1760616172899-0681b97a2de3?w=400&h=533&fit=crop&auto=format&q=80",
-    "https://images.unsplash.com/photo-1657036779347-db31ebaad251?w=400&h=533&fit=crop&auto=format&q=80",
-]
+try:
+    import openpyxl  # type: ignore
+except Exception as e:  # pragma: no cover
+    raise SystemExit(
+        "Missing dependency 'openpyxl'. Install with: pip install openpyxl"
+    ) from e
 
 
-def pick_img(i: int) -> str:
-    return IMG_POOL[i % len(IMG_POOL)]
-
-
-def pick_bata_formal_img(i: int) -> str:
-    return BATA_FORMAL_SHOE_IMG_POOL[i % len(BATA_FORMAL_SHOE_IMG_POOL)]
-
+MIN_PRODUCTS_PER_COMBO = 20
 
 APPAREL_SIZES = ["S", "M", "L", "XL", "XXL"]
 SHOE_SIZES = ["7", "8", "9", "10", "11"]
-GENDERS = ("Men", "Women", "Unisex")
 
 
-def gender_for(pid: str) -> str:
-    h = int(hashlib.md5((pid + "g").encode()).hexdigest()[:8], 16)
-    r = h % 100
-    if r < 48:
-        return "Men"
-    if r < 82:
-        return "Women"
-    return "Unisex"
+def norm_brand(s: str) -> str:
+    return re.sub(r"\s+", " ", str(s or "").strip()).upper()
 
 
-def infer_type(template: str) -> str:
-    """Map product name template to a stable category for Type filter."""
-    t = template.lower()
-    if any(
-        k in t
-        for k in (
-            "shoe",
-            "sneaker",
-            "sandal",
-            "slide",
-            "boot",
-            "cleat",
-            "floater",
-            "loafer",
-            "moccasin",
-            "derby",
-            "monk",
-            "chelsea",
-            "runner",
-            "ultraboost",
-            "stan smith",
-            "adilette",
-            "predator",
-            "duramo",
-            "boat",
-        )
-    ):
-        return "Footwear"
-    if "jeans" in t or re.search(r"\b50[125]\b", t) or "taper" in t and "jeans" in t:
-        return "Jeans"
-    if t == "loungewear":
-        return "Innerwear & Socks"
-    if any(
-        k in t
-        for k in (
-            "brief",
-            "trunk",
-            "boxer",
-            "socks pack",
-            "ankle socks",
-            "cotton socks",
-            "thermal",
-            "long johns",
-            "trunks solid",
-            "printed briefs",
-            "classic briefs",
-            "seamless vest",
-            "low-rise trunks",
-            "trunks pack",
-            "robe",
-            "pyjama set",
-            "pyjama",
-            "vest pack",
-            "gym vest",
-            "ribbed vest",
-        )
-    ):
-        return "Innerwear & Socks"
-    if t in ("cap", "belt", "beanie") or "sports cap" in t or "classic cap" in t:
-        return "Accessories"
-    if any(
-        k in t
-        for k in (
-            "hoodie",
-            "jacket",
-            "bomber",
-            "parka",
-            "blazer",
-            "cardigan",
-            "sweatshirt",
-            "sweater",
-            "pullover",
-            "denim jacket",
-            "lightweight jacket",
-            "track jacket",
-            "zip hoodie",
-            "hooded sweatshirt",
-            "half-zip",
-            "reflective jacket",
-            "puffer",
-            "sherpa",
-            "trucker",
-            "zip track",
-            "zip hood",
-        )
-    ):
-        return "Jackets & Sweats"
-    if any(
-        k in t
-        for k in (
-            "training tee",
-            "gym shorts",
-            "running singlet",
-            "athletic joggers",
-            "yoga",
-            "compression",
-            "cricket",
-            "badminton",
-            "mesh tank",
-            "performance shorts",
-            "dryfit",
-            "sport",
-            "designed 2 move",
-            "quick dry",
-            "muscle tee",
-            "zip track top",
-            "training vest",
-            "active polo",
-        )
-    ):
-        return "Activewear"
-    if any(
-        k in t
-        for k in (
-            "polo",
-            "tee",
-            "tank",
-            "henley",
-            "longline",
-            "graphic",
-            "logo tee",
-            "essential tee",
-            "crew neck",
-            "striped polo",
-            "pique",
-            "rugby",
-            "crop top",
-            "phone pocket",
-            "oversized tee",
-            "muscle fit tee",
-            "cotton tee",
-            "long sleeve tee",
-        )
-    ):
-        return "T-Shirts & Polos"
-    if (
-        "shirt" in t
-        or t in ("oxford", "slim fit", "tailored fit", "spread collar", "half sleeve", "full sleeve")
-        or "oxford" in t
-    ):
-        return "Shirts"
-    if any(
-        k in t
-        for k in (
-            "shorts",
-            "chinos",
-            "chino",
-            "joggers",
-            "trousers",
-            "pants",
-            "track pants",
-            "cargo",
-            "twill",
-            "leggings",
-            "loungewear shorts",
-            "swim shorts",
-            "denim shorts",
-            "relaxed shorts",
-            "basketball shorts",
-            "jogger pants",
-        )
-    ):
-        return "Shorts & Trousers"
-    if "loungewear" in t or "pyjama" in t or "loungewear" in t:
-        return "Innerwear & Socks"
-    if "sock" in t:
-        return "Innerwear & Socks"
-    if "vest" in t and "puffer" not in t and "zip" not in t:
-        return "Innerwear & Socks"
-    if "polo dress shirt" in t:
-        return "Shirts"
-    return "Other"
+def norm_type(s: str) -> str:
+    # Keep user-facing label mostly intact, just trim whitespace.
+    return re.sub(r"\s+", " ", str(s or "").strip())
 
 
-def size_for(pid: str, slug: str, template: str) -> str:
-    t = template.lower()
-    footwear = slug in ("bata",) or any(
-        k in t
-        for k in (
-            "shoe",
-            "sneaker",
-            "sandal",
-            "slide",
-            "boot",
-            "cleat",
-            "floater",
-            "loafer",
-            "moccasin",
-            "derby",
-            "monk",
-            "chelsea",
-            "runner",
-            "ultraboost",
-            "stan smith",
-            "adilette",
-            "predator",
-            "duramo",
-        )
-    )
-    h = int(hashlib.md5((pid + "sz").encode()).hexdigest()[:8], 16)
-    if footwear:
-        return SHOE_SIZES[h % len(SHOE_SIZES)]
-    return APPAREL_SIZES[h % len(APPAREL_SIZES)]
+def slugify(s: str) -> str:
+    s2 = str(s or "").strip().lower()
+    s2 = re.sub(r"[^a-z0-9]+", "-", s2)
+    s2 = re.sub(r"-{2,}", "-", s2).strip("-")
+    return s2 or "x"
 
 
-def price_tuple(seed: str) -> tuple:
+def price_tuple(seed: str) -> tuple[int, int, int]:
     h = int(hashlib.md5(seed.encode()).hexdigest()[:8], 16)
     price = 299 + (h % 4700)
     off = 15 + (h % 25)
@@ -381,68 +49,138 @@ def price_tuple(seed: str) -> tuple:
     return price, mrp, off
 
 
+def size_for(pid: str, type_label: str) -> str:
+    t = str(type_label or "").lower()
+    footwear = any(
+        k in t
+        for k in (
+            "shoe",
+            "sneaker",
+            "sandal",
+            "slide",
+            "boot",
+            "floater",
+            "loafer",
+            "moccasin",
+            "derby",
+            "monk",
+            "chelsea",
+            "runner",
+            "adilette",
+            "chappal",
+            "slipper",
+            "oxford",
+            "closed",
+        )
+    )
+    h = int(hashlib.md5((pid + "sz").encode()).hexdigest()[:8], 16)
+    if footwear:
+        return SHOE_SIZES[h % len(SHOE_SIZES)]
+    return APPAREL_SIZES[h % len(APPAREL_SIZES)]
+
+
+def unit_for(type_label: str) -> str:
+    return "1 pc"
+
+
+def has_size_for(type_label: str) -> bool:
+    t = str(type_label or "").lower()
+    if any(k in t for k in ("bag", "hand bag", "belt", "tie", "watch", "sunglass", "wallet", "perfume", "cufflink")):
+        return False
+    return True
+
+
+def read_brand_category_pairs(xlsx_path: Path) -> list[tuple[str, str]]:
+    wb = openpyxl.load_workbook(xlsx_path, read_only=True, data_only=True)
+    ws = wb.active
+    pairs: list[tuple[str, str]] = []
+    first = True
+    for row in ws.iter_rows(values_only=True):
+        if first:
+            first = False
+            continue
+        brand = norm_brand(row[0] if len(row) > 0 else "")
+        typ = norm_type(row[1] if len(row) > 1 else "")
+        if not brand or not typ:
+            continue
+        pairs.append((brand, typ))
+    # Deduplicate but keep stable order.
+    seen = set()
+    out: list[tuple[str, str]] = []
+    for b, t in pairs:
+        key = (b, t)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(key)
+    return out
+
+
 def main() -> None:
-    n_brands = len(ALL_BRANDS)
-    per_brand = TOTAL_PRODUCTS // n_brands
-    assert per_brand * n_brands == TOTAL_PRODUCTS, "TOTAL_PRODUCTS must divide evenly by brand count"
+    root = Path(__file__).resolve().parent.parent
+    xlsx_path = root / "Brand_Category_Data.xlsx"
+    if not xlsx_path.exists():
+        raise SystemExit(f"Missing {xlsx_path}")
 
-    products = []
-    baseline_ids = []
-    bata_img_i = 0
+    combos = read_brand_category_pairs(xlsx_path)
+    if not combos:
+        raise SystemExit("No (brand, category) combinations found in Brand_Category_Data.xlsx")
 
-    for brand_label, slug, templates in ALL_BRANDS:
-        tlen = len(templates)
-        for idx in range(1, per_brand + 1):
-            pid = f"lv-{slug}-{idx:03d}"
-            tmpl = templates[(idx - 1) % tlen]
-            full_name = f"{brand_label} {tmpl} #{idx}"
+    products: list[dict] = []
+    baseline_ids: list[str] = []
+
+    # Track per brand+type counter for naming and IDs.
+    per_combo_idx: dict[tuple[str, str], int] = {}
+
+    for brand, typ in combos:
+        combo_key = (brand, typ)
+        for i in range(1, MIN_PRODUCTS_PER_COMBO + 1):
+            per_combo_idx[combo_key] = per_combo_idx.get(combo_key, 0) + 1
+            n = per_combo_idx[combo_key]
+            pid = f"lv-{slugify(brand)}-{slugify(typ)}-{n:03d}"
             price, mrp, off = price_tuple(pid)
-            if slug == "bata":
-                img = pick_bata_formal_img(bata_img_i)
-                bata_img_i += 1
-            else:
-                img = pick_img(len(products))
-            typ = infer_type(tmpl)
             products.append(
                 {
                     "id": pid,
-                    "brand": brand_label,
-                    "name": full_name,
+                    "brand": brand,
+                    "name": f"{brand} {typ} #{n}",
                     "price": price,
                     "mrp": mrp,
                     "off": off,
-                    "img": img,
-                    "unit": "1 pc",
-                    "hasSize": True,
-                    "gender": gender_for(pid),
+                    # Image is now category-derived in lifestyle-render.js; keep a non-empty placeholder for compatibility.
+                    "img": "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=400&h=533&fit=crop&auto=format&q=80",
+                    "unit": unit_for(typ),
+                    "hasSize": has_size_for(typ),
+                    "gender": "",
                     "type": typ,
-                    "size": size_for(pid, slug, tmpl),
+                    "size": size_for(pid, typ) if has_size_for(typ) else "",
                 }
             )
-            if len(baseline_ids) < 5 and slug in BASELINE_SLUGS and idx <= 4:
-                baseline_ids.append(pid)
 
-    assert len(baseline_ids) == 5
-    assert len(products) == TOTAL_PRODUCTS
+    # Keep baseline IDs stable: first 50 items are enough for the "toggle off" view.
+    baseline_ids = [p["id"] for p in products[:50]]
 
-    brand_order = [b[0] for b in ALL_BRANDS]
-    type_order = sorted({p["type"] for p in products}, key=str.lower)
-    filter_options = {
-        "genders": list(GENDERS),
-        "brands": brand_order,
-        "sizes": APPAREL_SIZES + SHOE_SIZES,
-        "types": type_order,
-    }
+    # Filter options should match the sheet (brands/types).
+    brands = []
+    seen_b = set()
+    for b, _t in combos:
+        if b in seen_b:
+            continue
+        seen_b.add(b)
+        brands.append(b)
+    types = sorted({t for _b, t in combos}, key=str.lower)
 
-    out_path = Path(__file__).resolve().parent.parent / "lifestyle-catalog.js"
+    filter_options = {"brands": brands, "types": types}
+
+    out_path = root / "lifestyle-catalog.js"
     lines = [
         "/** Auto-generated by scripts/generate_lifestyle_catalog.py — do not edit by hand. */",
-        "window.LIFESTYLE_BASELINE_IDS = " + json.dumps(baseline_ids) + ";",
+        "window.LIFESTYLE_BASELINE_IDS = " + json.dumps(baseline_ids, ensure_ascii=False) + ";",
         "window.LIFESTYLE_FILTER_OPTIONS = " + json.dumps(filter_options, ensure_ascii=False) + ";",
         "window.LIFESTYLE_CATALOG = " + json.dumps(products, ensure_ascii=False) + ";",
     ]
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(f"Wrote {len(products)} products, baseline {len(baseline_ids)} → {out_path}")
+    print(f"Wrote {len(products)} products ({MIN_PRODUCTS_PER_COMBO} per combo × {len(combos)} combos) → {out_path}")
 
 
 if __name__ == "__main__":
