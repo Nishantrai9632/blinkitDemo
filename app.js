@@ -598,9 +598,15 @@
       return { lat: loc.lat, lng: loc.lng, pincode: String(loc.pincode || "").trim() };
     }
     var pin = loc && loc.pincode ? String(loc.pincode).trim() : "";
-    if (pin && window.PINCODE_LAT_LNG && window.PINCODE_LAT_LNG[pin]) {
-      var pair = window.PINCODE_LAT_LNG[pin];
-      return { lat: Number(pair[0]), lng: Number(pair[1]), pincode: pin };
+    if (pin && window.PINCODE_LAT_LNG) {
+      // Some generated mappings use numeric-like keys like "560038.0".
+      var key = pin;
+      var pair = window.PINCODE_LAT_LNG[key];
+      if (!pair && pin.indexOf(".") === -1) pair = window.PINCODE_LAT_LNG[pin + ".0"];
+      if (!pair && pin.endsWith(".0")) pair = window.PINCODE_LAT_LNG[pin.replace(/\.0$/, "")];
+      if (pair) {
+        return { lat: Number(pair[0]), lng: Number(pair[1]), pincode: pin };
+      }
     }
     return null;
   }
@@ -707,11 +713,13 @@
       var okType = Object.keys(lifestyleTypeSelected).length === 0 || !!lifestyleTypeSelected[ty];
       var okDelivery = true;
       if (delKeysFacet.length > 0) {
+        // If we don't know the user's lat/lng (or mapping missing), don't hide everything.
+        // Delivery-by filtering becomes a best-effort filter when location is known.
         if (!distFacet || !distFacet.minKmByBrand) {
-          okDelivery = false;
+          okDelivery = true;
         } else {
           var minKm = distFacet.minKmByBrand[b];
-          if (minKm == null) okDelivery = false;
+          if (minKm == null) okDelivery = true;
           else okDelivery = minKmMatchesAnyDeliveryFilter(minKm, delKeysFacet);
         }
       }
@@ -746,9 +754,74 @@
       }
       return compareLifestyleSort(a, b);
     });
+
+    function etaLabelFromMinutes(m) {
+      var mins = Math.max(1, Math.round(Number(m) || 0));
+      if (mins >= 120) {
+        var hrs = Math.round(mins / 60);
+        return hrs + " HR";
+      }
+      if (mins >= 60) {
+        var h = Math.floor(mins / 60);
+        var rm = mins % 60;
+        if (rm < 5) return h + " HR";
+        return h + " HR " + rm + " MINS";
+      }
+      return mins + " MINS";
+    }
+
+    function seededRand01(seed) {
+      // xorshift32-ish, deterministic per seed.
+      var x = seed | 0;
+      x ^= x << 13;
+      x ^= x >>> 17;
+      x ^= x << 5;
+      // 0..1
+      return ((x >>> 0) % 10000) / 10000;
+    }
+
+    function hashStringToInt(s) {
+      var str = String(s || "");
+      var h = 2166136261;
+      for (var i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h | 0;
+    }
+
+    function deliveryRangeFor(keys) {
+      // If multiple selected, take the widest range among them.
+      var maxKey = null;
+      for (var i = 0; i < keys.length; i++) {
+        var k = keys[i];
+        if (k === "same-day") return { lo: 120, hi: 480 };
+        if (k === "120") maxKey = maxKey === "60" || maxKey === "30" || maxKey == null ? "120" : maxKey;
+        if (k === "60" && maxKey !== "120") maxKey = maxKey === "30" || maxKey == null ? "60" : maxKey;
+        if (k === "30" && !maxKey) maxKey = "30";
+      }
+      if (maxKey === "120") return { lo: 20, hi: 120 };
+      if (maxKey === "60") return { lo: 20, hi: 60 };
+      if (maxKey === "30") return { lo: 20, hi: 30 };
+      return null;
+    }
+
+    var etaRange = delKeysFacet.length ? deliveryRangeFor(delKeysFacet) : null;
     match.forEach(function (c) {
       c.style.display = "";
       gridLifestyle.appendChild(c);
+
+      // Update the visible ETA label based on Delivery By selection.
+      if (etaRange) {
+        var etaEl = c.querySelector(".product-card__eta");
+        if (etaEl) {
+          var cid = c.getAttribute("data-id") || c.getAttribute("data-name") || "";
+          var seed = hashStringToInt(cid + "|" + delKeysFacet.join(","));
+          var r = seededRand01(seed);
+          var mins = etaRange.lo + Math.floor(r * (etaRange.hi - etaRange.lo + 1));
+          etaEl.textContent = etaLabelFromMinutes(mins);
+        }
+      }
     });
     nomatch.forEach(function (c) {
       c.style.display = "none";
@@ -819,11 +892,12 @@
           var okT = typeKeys.length === 0 || !!lifestyleTypeSelected[r.type];
           var okD = true;
           if (deliveryKeys2.length > 0) {
+            // Best-effort: if we can't compute distances, don't zero-out the stat.
             if (!minKmByBrand) {
-              okD = false;
+              okD = true;
             } else {
               var mk = minKmByBrand[r.brand];
-              if (mk == null) okD = false;
+              if (mk == null) okD = true;
               else okD = minKmMatchesAnyDeliveryFilter(mk, deliveryKeys2);
             }
           }
@@ -935,6 +1009,20 @@
         }
       }
     });
+
+    // Close open dropdown when clicking anywhere outside the active dropdown (even within the bar).
+    document.addEventListener(
+      "click",
+      function (e) {
+        if (!lifestyleFiltersRoot) return;
+        var openTrigger = lifestyleFiltersRoot.querySelector('[id^="lifestyleTrigger"][aria-expanded="true"]');
+        if (!openTrigger) return;
+        var openDd = openTrigger.closest(".lifestyle-filter-dd");
+        if (openDd && openDd.contains(e.target)) return;
+        closeAllLifestyleDropdowns();
+      },
+      true
+    );
 
     document.addEventListener("click", function (e) {
       if (!lifestyleFiltersRoot || lifestyleFiltersRoot.contains(e.target)) return;
@@ -1518,6 +1606,26 @@
     return { pincode: p, place: place, city: city };
   }
 
+  async function geocodePincodeLatLng(pin) {
+    var p = String(pin || "").trim();
+    // Prefer local mapping when available (instant, no network).
+    if (p && window.PINCODE_LAT_LNG) {
+      var pair = window.PINCODE_LAT_LNG[p];
+      if (!pair && p.indexOf(".") === -1) pair = window.PINCODE_LAT_LNG[p + ".0"];
+      if (!pair && p.endsWith(".0")) pair = window.PINCODE_LAT_LNG[p.replace(/\.0$/, "")];
+      if (pair) return { lat: Number(pair[0]), lng: Number(pair[1]) };
+    }
+    // Best-effort: forward geocode pincode via Nominatim.
+    var url =
+      "https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=in&limit=1&q=" + encodeURIComponent(p);
+    var res = await fetch(url, { headers: { "Accept-Language": "en" } });
+    if (!res.ok) throw new Error("pincode geocode failed");
+    var arr = await res.json();
+    var first = Array.isArray(arr) && arr[0] ? arr[0] : null;
+    if (!first || first.lat == null || first.lon == null) throw new Error("pincode geocode empty");
+    return { lat: Number(first.lat), lng: Number(first.lon) };
+  }
+
   if (locationBtn && locationModal) {
     locationBtn.addEventListener("click", openLocation);
     locationModal.querySelectorAll("[data-close]").forEach(function (el) {
@@ -1554,6 +1662,10 @@
               }
               setSavedLocation({ method: "geo", lat: lat, lng: lng, pincode: r.pincode, place: r.place, city: r.city });
               renderHeaderLocation();
+              if (gridLifestyle) {
+                updateLifestyleStats();
+                applyLifestyleFacets();
+              }
               closeLocation();
             } catch (e) {
               setHint("Couldn’t detect location. Please enter your pincode.");
@@ -1583,8 +1695,24 @@
         setHint("Fetching area details…");
         try {
           var r = await lookupPincode(pin);
-          setSavedLocation({ method: "pincode", pincode: r.pincode, place: r.place, city: r.city });
+          // Also try to resolve lat/lng so Delivery By works even when PINCODE_LAT_LNG doesn't include this pin.
+          var latlng = null;
+          try {
+            latlng = await geocodePincodeLatLng(r.pincode);
+          } catch (e2) {
+            latlng = null;
+          }
+          var toSave = { method: "pincode", pincode: r.pincode, place: r.place, city: r.city };
+          if (latlng && typeof latlng.lat === "number" && typeof latlng.lng === "number") {
+            toSave.lat = latlng.lat;
+            toSave.lng = latlng.lng;
+          }
+          setSavedLocation(toSave);
           renderHeaderLocation();
+          if (gridLifestyle) {
+            updateLifestyleStats();
+            applyLifestyleFacets();
+          }
           closeLocation();
         } catch (err) {
           setHint("Couldn’t find this pincode. Please try another one.");

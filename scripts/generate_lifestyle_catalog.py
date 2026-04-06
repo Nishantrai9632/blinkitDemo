@@ -17,7 +17,8 @@ except Exception as e:  # pragma: no cover
     ) from e
 
 
-MIN_PRODUCTS_PER_COMBO = 20
+# Rendering thousands of DOM nodes is slow on mobile; keep this small for <1s initial render.
+MIN_PRODUCTS_PER_COMBO = 6
 
 APPAREL_SIZES = ["S", "M", "L", "XL", "XXL"]
 SHOE_SIZES = ["7", "8", "9", "10", "11"]

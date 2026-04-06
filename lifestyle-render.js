@@ -5,13 +5,32 @@
   var CLOCK_SVG =
     '<svg class="product-card__clock" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 
-  // Keep these URLs stable and re-use across categories (avoid broken / mismatched images).
+  // Neutral stock photography (Unsplash) — no brand logos; split footwear so “formal shoes”
+  // doesn’t reuse loud athletic sneaker shots.
   var IMG_POOLS = {
-    footwear: [
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=533&fit=crop&auto=format&q=80",
+    footwear_formal: [
+      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3b?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1614252235316-8c857d38b5a0?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1616400653233-8e2daf37b0b0?w=400&h=533&fit=crop&auto=format&q=80"
+    ],
+    footwear_sandal: [
+      "https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1573100924848-075b9b5360d?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=533&fit=crop&auto=format&q=80"
+    ],
+    footwear_boot: [
+      "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3b?w=400&h=533&fit=crop&auto=format&q=80"
+    ],
+    footwear_sport: [
+      "https://images.unsplash.com/photo-1556906781-9a412961c28c?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=533&fit=crop&auto=format&q=80"
+    ],
+    footwear_casual: [
       "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=533&fit=crop&auto=format&q=80",
-      "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400&h=533&fit=crop&auto=format&q=80",
-      "https://images.unsplash.com/photo-1528701800489-20be3c0ea6f5?w=400&h=533&fit=crop&auto=format&q=80",
+      "https://images.unsplash.com/photo-1556906781-9a412961c28c?w=400&h=533&fit=crop&auto=format&q=80",
       "https://images.unsplash.com/photo-1523381294911-8d3cead13475?w=400&h=533&fit=crop&auto=format&q=80"
     ],
     tops: [
@@ -69,24 +88,59 @@
     return pool[idx];
   }
 
+  function pickUniqueFrom(pool, seed, usedMap) {
+    if (!pool || !pool.length) return DEFAULT_IMG;
+    var base = hashStr(seed) % pool.length;
+    for (var i = 0; i < pool.length; i++) {
+      var idx = (base + i) % pool.length;
+      var url = pool[idx];
+      if (!usedMap[url]) {
+        usedMap[url] = true;
+        return url;
+      }
+    }
+    // If pool is smaller than requested unique count, fall back to deterministic pick.
+    return pickFrom(pool, seed);
+  }
+
   function poolKeyForType(typeLabel) {
     var t = String(typeLabel || "").toLowerCase().trim();
+    // Footwear — order matters: sandals vs formal vs sports vs generic “shoes”.
     if (
-      t.indexOf("shoe") !== -1 ||
-      t.indexOf("sneaker") !== -1 ||
-      t.indexOf("boot") !== -1 ||
       t.indexOf("sandal") !== -1 ||
       t.indexOf("slipper") !== -1 ||
       t.indexOf("chappal") !== -1 ||
-      t.indexOf("loafer") !== -1 ||
-      t.indexOf("oxford") !== -1 ||
-      t.indexOf("derb") !== -1 ||
-      t.indexOf("plimsoll") !== -1 ||
-      t.indexOf("floater") !== -1 ||
-      t.indexOf("slides") !== -1 ||
-      t.indexOf("closed") !== -1
+      t.indexOf("slide") !== -1 ||
+      t.indexOf("floater") !== -1
     ) {
-      return "footwear";
+      return "footwear_sandal";
+    }
+    if (
+      t.indexOf("formal") !== -1 ||
+      t.indexOf("oxford") !== -1 ||
+      t.indexOf("loafer") !== -1 ||
+      t.indexOf("derb") !== -1 ||
+      t.indexOf("monk") !== -1 ||
+      t.indexOf("school") !== -1 ||
+      t.indexOf("plimsoll") !== -1 ||
+      t.indexOf("ballerina") !== -1
+    ) {
+      return "footwear_formal";
+    }
+    if (t.indexOf("boot") !== -1) {
+      return "footwear_boot";
+    }
+    if (
+      t.indexOf("sneaker") !== -1 ||
+      t.indexOf("sport") !== -1 ||
+      t.indexOf("cricket") !== -1 ||
+      t.indexOf("runner") !== -1 ||
+      t.indexOf("cleat") !== -1
+    ) {
+      return "footwear_sport";
+    }
+    if (t.indexOf("shoe") !== -1 || t.indexOf("closed") !== -1) {
+      return "footwear_casual";
     }
     if (
       t.indexOf("saree") !== -1 ||
@@ -315,6 +369,24 @@
     var parts = new Array(items.length);
     for (var i = 0; i < items.length; i++) parts[i] = buildCard(items[i], i);
     grid.innerHTML = parts.join("");
+
+    // Reduce “redundant” look: ensure top 100 tiles use distinct images when possible.
+    // We do this after render so we can overwrite src safely without changing catalog data.
+    var used = {};
+    var cards = grid.querySelectorAll(".product-card");
+    var topN = Math.min(100, cards.length);
+    for (var ti = 0; ti < topN; ti++) {
+      var card = cards[ti];
+      var typ = card.getAttribute("data-type") || "";
+      var brand = card.getAttribute("data-brand") || "";
+      var pid = card.getAttribute("data-id") || "";
+      var poolKey = poolKeyForType(typ);
+      var pool = IMG_POOLS[poolKey];
+      var imgUrl = pickUniqueFrom(pool, pid + "|" + brand + "|" + typ + "|" + ti, used);
+      var imgEl = card.querySelector("img.product-card__photo");
+      if (imgEl) imgEl.src = imgUrl;
+      card.setAttribute("data-product-img", imgUrl);
+    }
 
     // Ensure every card has a valid image even if a remote URL fails.
     var imgs = grid.querySelectorAll("img.product-card__photo");
