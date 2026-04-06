@@ -18,8 +18,8 @@
           <span class="logo__blink">blink</span><span class="logo__it">it</span>
         </a>
         <button type="button" class="location location--header-slab" id="locationBtn">
-          <span class="location__line1" id="locationDeliveryLine">Delivery in 19 minutes</span>
-          <span class="location__line2">158, General KS Thimayya Rd, S… <svg class="location__chev" width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+          <span class="location__line1" id="locationDeliveryLine">Deliver to</span>
+          <span class="location__line2" id="locationAddressLine">Set delivery location <svg class="location__chev" width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
         </button>
         <button
           type="button"
@@ -265,80 +265,33 @@
       </header>
       <div class="loc-modal__body">
         <div class="loc-modal__toolbar">
-          <button type="button" class="loc-modal__detect btn btn--green">Detect my location</button>
+          <button type="button" class="loc-modal__detect btn btn--green" id="locDetectBtn">Detect location</button>
           <div class="loc-modal__or" aria-hidden="true">
             <span class="loc-modal__or-line"></span>
             <span class="loc-modal__or-badge">OR</span>
             <span class="loc-modal__or-line"></span>
           </div>
-          <label class="loc-modal__search-label">
-            <span class="visually-hidden">Search delivery location</span>
-            <input
-              type="search"
-              class="loc-modal__search"
-              placeholder="search delivery location"
-              autocomplete="off"
-            />
-          </label>
+          <form class="loc-modal__pincode" id="locPincodeForm">
+            <label class="loc-modal__pincode-label">
+              <span class="visually-hidden">Enter pincode</span>
+              <input
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]{6}"
+                maxlength="6"
+                class="loc-modal__pincode-input"
+                id="locPincodeInput"
+                placeholder="Enter pincode"
+                autocomplete="postal-code"
+                required
+              />
+            </label>
+            <button type="submit" class="btn btn--block loc-modal__pincode-btn" id="locPincodeSubmit">Submit</button>
+          </form>
         </div>
-
-        <p class="loc-modal__section-title">Your saved addresses</p>
-        <ul class="loc-modal__list">
-          <li>
-            <div class="address-card address-card--blinkit" data-close tabindex="0" role="button">
-              <span class="address-card__icon address-card__icon--home" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-5v-6H10v6H5a1 1 0 01-1-1v-9.5z" stroke="#c9a227" stroke-width="1.8" stroke-linejoin="round"/></svg>
-              </span>
-              <div class="address-card__content">
-                <strong class="address-card__label">Home</strong>
-                <p class="address-card__addr">158, General KS Thimayya Rd, Bengaluru — 560025</p>
-                <div class="address-card__actions">
-                  <button type="button" class="address-card__action address-card__action--edit" aria-label="Edit address">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 21h4l10.5-10.5a2 2 0 000-2.83L18.33 8a2 2 0 00-2.83 0L5 17.17V21z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </li>
-          <li>
-            <div class="address-card address-card--blinkit" data-close tabindex="0" role="button">
-              <span class="address-card__icon address-card__icon--home" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-5v-6H10v6H5a1 1 0 01-1-1v-9.5z" stroke="#c9a227" stroke-width="1.8" stroke-linejoin="round"/></svg>
-              </span>
-              <div class="address-card__content">
-                <strong class="address-card__label">Home</strong>
-                <p class="address-card__addr">12, MG Road, Indiranagar, Bengaluru — 560038</p>
-                <div class="address-card__actions">
-                  <button type="button" class="address-card__action address-card__action--edit" aria-label="Edit address">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 21h4l10.5-10.5a2 2 0 000-2.83L18.33 8a2 2 0 00-2.83 0L5 17.17V21z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                  </button>
-                  <button type="button" class="address-card__action address-card__action--delete" aria-label="Delete address">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1-2h10l1 2M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </li>
-          <li>
-            <div class="address-card address-card--blinkit" data-close tabindex="0" role="button">
-              <span class="address-card__icon address-card__icon--work" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 21h16M6 21V10l8-4 8 4v11M10 21v-4h4v4" stroke="#c9a227" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <div class="address-card__content">
-                <strong class="address-card__label">Work</strong>
-                <p class="address-card__addr">Embassy Tech Village, Outer Ring Rd, Bengaluru — 560103</p>
-                <div class="address-card__actions">
-                  <button type="button" class="address-card__action address-card__action--edit" aria-label="Edit address">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 21h4l10.5-10.5a2 2 0 000-2.83L18.33 8a2 2 0 00-2.83 0L5 17.17V21z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                  </button>
-                  <button type="button" class="address-card__action address-card__action--delete" aria-label="Delete address">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1-2h10l1 2M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </li>
-        </ul>
+        <p class="loc-modal__hint" id="locModalHint">
+          Detect location to auto-fill your area and pincode, or enter your pincode to continue.
+        </p>
       </div>
     </div>
   </div>

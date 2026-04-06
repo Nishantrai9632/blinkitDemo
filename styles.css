@@ -2439,12 +2439,20 @@ body.omuni-on .cat-tile__meta {
   justify-content: center;
 }
 
-.loc-modal__search-label {
-  flex: 1 1 160px;
+.loc-modal__pincode {
+  flex: 1 1 220px;
+  min-width: 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.loc-modal__pincode-label {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
-.loc-modal__search {
+.loc-modal__pincode-input {
   width: 100%;
   padding: 11px 14px;
   border: 1px solid #d1d5db;
@@ -2454,127 +2462,36 @@ body.omuni-on .cat-tile__meta {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.loc-modal__search::placeholder {
+.loc-modal__pincode-input::placeholder {
   color: #9ca3af;
-  text-transform: none;
 }
 
-.loc-modal__search:focus {
+.loc-modal__pincode-input:focus {
   outline: none;
   border-color: var(--green);
   box-shadow: 0 0 0 2px rgba(12, 131, 31, 0.15);
 }
 
-.loc-modal__section-title {
-  margin: 0 0 12px;
-  font-size: 0.88rem;
-  font-weight: 800;
-  color: var(--text);
-}
-
-.loc-modal__list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.address-card.address-card--blinkit {
-  display: flex;
-  gap: 12px;
-  padding: 14px;
-  background: #fff;
-  border: 1px solid #e8eaed;
-  border-radius: 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  align-items: flex-start;
-  transition: box-shadow 0.15s ease, border-color 0.15s ease;
-}
-
-.address-card.address-card--blinkit[data-close] {
-  cursor: pointer;
-}
-
-.address-card.address-card--blinkit[data-close]:hover {
-  border-color: rgba(12, 131, 31, 0.35);
-  box-shadow: 0 4px 14px rgba(12, 131, 31, 0.1);
-}
-
-.address-card.address-card--blinkit:focus-visible {
-  outline: 2px solid var(--green);
-  outline-offset: 2px;
-}
-
-.address-card--blinkit .address-card__icon {
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
+.loc-modal__pincode-btn {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 11px 14px;
   border-radius: 10px;
-  background: #f3f4f6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.address-card--blinkit .address-card__content {
-  flex: 1;
-  min-width: 0;
-}
-
-.address-card--blinkit .address-card__label {
-  display: block;
-  font-size: 0.92rem;
+  font-size: 0.82rem;
   font-weight: 800;
-  color: var(--text);
-  margin-bottom: 4px;
+  white-space: nowrap;
 }
 
-.address-card--blinkit .address-card__addr {
-  margin: 0 0 10px;
-  font-size: 0.78rem;
-  line-height: 1.45;
-  color: #6b7280;
+.loc-modal__hint {
+  margin: 2px 2px 0;
+  font-size: 0.86rem;
+  line-height: 1.35;
+  color: rgba(15, 23, 42, 0.62);
 }
 
-.address-card__actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+/* Saved address list removed (pincode-only modal) */
 
-.address-card__action {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.address-card__action--edit {
-  color: var(--green);
-}
-
-.address-card__action--edit:hover {
-  background: rgba(12, 131, 31, 0.08);
-  border-color: rgba(12, 131, 31, 0.35);
-}
-
-.address-card__action--delete {
-  color: #dc2626;
-}
-
-.address-card__action--delete:hover {
-  background: rgba(220, 38, 38, 0.08);
-  border-color: rgba(220, 38, 38, 0.35);
-}
+/* address-card action styles removed with saved addresses */
 
 @media (max-width: 380px) {
   .loc-modal__toolbar {

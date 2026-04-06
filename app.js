@@ -71,6 +71,8 @@
 
   var locationModal = document.getElementById("locationModal");
   var locationBtn = document.getElementById("locationBtn");
+  var locationDeliveryLine = document.getElementById("locationDeliveryLine");
+  var locationAddressLine = document.getElementById("locationAddressLine");
 
   var navAccountWrap = document.getElementById("navAccountWrap");
   var navAccountBtn = document.getElementById("navAccountBtn");
@@ -1333,25 +1335,166 @@
     document.body.style.overflow = "";
   }
 
+  function safeJsonParse(s) {
+    try {
+      return JSON.parse(s);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function setSavedLocation(loc) {
+    try {
+      localStorage.setItem("blinkit_location", JSON.stringify(loc));
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  function getSavedLocation() {
+    try {
+      return safeJsonParse(localStorage.getItem("blinkit_location") || "");
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function formatLocationLine(loc) {
+    if (!loc || !loc.pincode) return "";
+    var pin = String(loc.pincode || "").trim();
+    var place = String(loc.place || "").trim();
+    var city = String(loc.city || "").trim();
+    var left = place && city && place.toLowerCase() !== city.toLowerCase() ? place + ", " + city : place || city;
+    left = left || "Delivery area";
+    return left + " • " + pin;
+  }
+
+  function renderHeaderLocation() {
+    if (!locationAddressLine) return;
+    var loc = getSavedLocation();
+    var line = formatLocationLine(loc);
+    if (!line) {
+      locationAddressLine.childNodes[0].nodeValue = "Set delivery location ";
+      if (locationDeliveryLine) locationDeliveryLine.textContent = "Deliver to";
+      return;
+    }
+    // keep the chevron svg at end; replace only leading text node
+    locationAddressLine.childNodes[0].nodeValue = line + " ";
+    if (locationDeliveryLine) locationDeliveryLine.textContent = "Deliver to";
+  }
+
+  async function reverseGeocode(lat, lng) {
+    // Nominatim reverse geocoding (best-effort)
+    var url =
+      "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=" +
+      encodeURIComponent(lat) +
+      "&lon=" +
+      encodeURIComponent(lng);
+    var res = await fetch(url, { headers: { "Accept-Language": "en" } });
+    if (!res.ok) throw new Error("reverse geocode failed");
+    var data = await res.json();
+    var addr = data && data.address ? data.address : {};
+    var pincode = (addr.postcode || "").trim();
+    var place =
+      (addr.suburb || addr.neighbourhood || addr.city_district || addr.county || addr.town || addr.village || "").trim();
+    var city = (addr.city || addr.town || addr.village || addr.state_district || "").trim();
+    return { pincode: pincode, place: place, city: city };
+  }
+
+  async function lookupPincode(pin) {
+    var p = String(pin || "").trim();
+    // India Post API (best-effort)
+    var res = await fetch("https://api.postalpincode.in/pincode/" + encodeURIComponent(p));
+    if (!res.ok) throw new Error("pincode lookup failed");
+    var arr = await res.json();
+    var first = Array.isArray(arr) && arr[0] ? arr[0] : null;
+    if (!first || first.Status !== "Success" || !Array.isArray(first.PostOffice) || !first.PostOffice[0]) {
+      throw new Error("invalid pincode");
+    }
+    var po = first.PostOffice[0];
+    var place = String(po.Name || "").trim();
+    var city = String(po.District || po.Region || "").trim();
+    return { pincode: p, place: place, city: city };
+  }
+
   if (locationBtn && locationModal) {
     locationBtn.addEventListener("click", openLocation);
     locationModal.querySelectorAll("[data-close]").forEach(function (el) {
       el.addEventListener("click", closeLocation);
     });
-    locationModal.querySelectorAll(".address-card__action").forEach(function (btn) {
-      btn.addEventListener("click", function (e) {
-        e.stopPropagation();
+    var detectBtn = document.getElementById("locDetectBtn");
+    var pinForm = document.getElementById("locPincodeForm");
+    var pinInput = document.getElementById("locPincodeInput");
+    var pinSubmit = document.getElementById("locPincodeSubmit");
+    var hint = document.getElementById("locModalHint");
+
+    function setHint(msg) {
+      if (!hint) return;
+      hint.textContent = msg;
+    }
+
+    if (detectBtn) {
+      detectBtn.addEventListener("click", function () {
+        if (!navigator.geolocation) {
+          setHint("Geolocation is not supported in this browser. Please enter pincode.");
+          return;
+        }
+        detectBtn.disabled = true;
+        setHint("Detecting your location…");
+        navigator.geolocation.getCurrentPosition(
+          async function (pos) {
+            try {
+              var lat = pos.coords.latitude;
+              var lng = pos.coords.longitude;
+              var r = await reverseGeocode(lat, lng);
+              if (!r.pincode) {
+                setHint("Couldn’t auto-detect pincode. Please enter your pincode.");
+                return;
+              }
+              setSavedLocation({ method: "geo", lat: lat, lng: lng, pincode: r.pincode, place: r.place, city: r.city });
+              renderHeaderLocation();
+              closeLocation();
+            } catch (e) {
+              setHint("Couldn’t detect location. Please enter your pincode.");
+            } finally {
+              detectBtn.disabled = false;
+            }
+          },
+          function () {
+            detectBtn.disabled = false;
+            setHint("Location permission denied. Please enter your pincode.");
+          },
+          { enableHighAccuracy: false, timeout: 12000, maximumAge: 600000 }
+        );
       });
-    });
-    locationModal.querySelectorAll(".address-card--blinkit[data-close]").forEach(function (card) {
-      card.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
+    }
+
+    if (pinForm && pinInput) {
+      pinForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var pin = String(pinInput.value || "").replace(/\D/g, "").slice(0, 6);
+        pinInput.value = pin;
+        if (pin.length !== 6) {
+          setHint("Please enter a valid 6-digit pincode.");
+          return;
+        }
+        if (pinSubmit) pinSubmit.disabled = true;
+        setHint("Fetching area details…");
+        try {
+          var r = await lookupPincode(pin);
+          setSavedLocation({ method: "pincode", pincode: r.pincode, place: r.place, city: r.city });
+          renderHeaderLocation();
           closeLocation();
+        } catch (err) {
+          setHint("Couldn’t find this pincode. Please try another one.");
+        } finally {
+          if (pinSubmit) pinSubmit.disabled = false;
         }
       });
-    });
+    }
   }
+
+  renderHeaderLocation();
 
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape") return;
