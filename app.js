@@ -554,6 +554,74 @@
     return fallback ? parseInt(fallback[1], 10) : 0;
   }
 
+  function haversineKm(aLat, aLng, bLat, bLng) {
+    function toRad(x) {
+      return (x * Math.PI) / 180;
+    }
+    var R = 6371;
+    var dLat = toRad(bLat - aLat);
+    var dLng = toRad(bLng - aLng);
+    var s1 = Math.sin(dLat / 2);
+    var s2 = Math.sin(dLng / 2);
+    var aa = s1 * s1 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * s2 * s2;
+    var c = 2 * Math.atan2(Math.sqrt(aa), Math.sqrt(1 - aa));
+    return R * c;
+  }
+
+  /** Nearest-store distance (km) must match at least one selected delivery filter (OR). */
+  function minKmMatchesAnyDeliveryFilter(minKm, keys) {
+    for (var i = 0; i < keys.length; i++) {
+      var k = keys[i];
+      if (k === "30" && minKm < 7) return true;
+      if (k === "60" && minKm < 15) return true;
+      if (k === "120" && minKm <= 40) return true;
+      if (k === "same-day" && minKm < 800) return true;
+    }
+    return false;
+  }
+
+  /** Individual store distance (km) matches at least one selected delivery filter (OR). */
+  function storeKmMatchesAnyDeliveryFilter(km, keys) {
+    for (var j = 0; j < keys.length; j++) {
+      var k2 = keys[j];
+      if (k2 === "30" && km < 7) return true;
+      if (k2 === "60" && km < 15) return true;
+      if (k2 === "120" && km <= 40) return true;
+      if (k2 === "same-day" && km < 800) return true;
+    }
+    return false;
+  }
+
+  function getUserLatLng() {
+    var loc = getSavedLocation && getSavedLocation();
+    if (loc && typeof loc.lat === "number" && typeof loc.lng === "number") {
+      return { lat: loc.lat, lng: loc.lng, pincode: String(loc.pincode || "").trim() };
+    }
+    var pin = loc && loc.pincode ? String(loc.pincode).trim() : "";
+    if (pin && window.PINCODE_LAT_LNG && window.PINCODE_LAT_LNG[pin]) {
+      var pair = window.PINCODE_LAT_LNG[pin];
+      return { lat: Number(pair[0]), lng: Number(pair[1]), pincode: pin };
+    }
+    return null;
+  }
+
+  function computeBrandDistanceBuckets() {
+    var user = getUserLatLng();
+    var stores = window.WAREHOUSE_STORES || [];
+    if (!user || !(user.lat || user.lat === 0) || !(user.lng || user.lng === 0) || stores.length === 0) {
+      return null;
+    }
+    var minKmByBrand = {};
+    for (var i = 0; i < stores.length; i++) {
+      var s = stores[i];
+      if (!s || !s.brand) continue;
+      var km = haversineKm(user.lat, user.lng, Number(s.lat), Number(s.lng));
+      var b = s.brand;
+      if (minKmByBrand[b] == null || km < minKmByBrand[b]) minKmByBrand[b] = km;
+    }
+    return { minKmByBrand: minKmByBrand };
+  }
+
   function syncMultiSelectPanel(panel, attrName, selectedMap) {
     if (!panel) return;
     var hasAny = Object.keys(selectedMap).length > 0;
@@ -624,6 +692,8 @@
       }
     }
     var sortMode = lifestyleSortEl ? lifestyleSortEl.value : "relevance";
+    var delKeysFacet = Object.keys(lifestyleDeliverySelected);
+    var distFacet = delKeysFacet.length ? computeBrandDistanceBuckets() : null;
     var cards = Array.prototype.slice.call(gridLifestyle.querySelectorAll(".product-card"));
     var match = [];
     var nomatch = [];
@@ -636,12 +706,14 @@
       var ty = card.getAttribute("data-type") || "";
       var okType = Object.keys(lifestyleTypeSelected).length === 0 || !!lifestyleTypeSelected[ty];
       var okDelivery = true;
-      if (Object.keys(lifestyleDeliverySelected).length > 0) {
-        var etaEl = card.querySelector(".product-card__eta");
-        var mins = minutesFromEtaLabel(etaEl ? etaEl.textContent : "");
-        if (mins <= 0) mins = 9999;
-        var bucket = mins <= 30 ? "30" : mins <= 60 ? "60" : mins <= 120 ? "120" : "same-day";
-        okDelivery = !!lifestyleDeliverySelected[bucket];
+      if (delKeysFacet.length > 0) {
+        if (!distFacet || !distFacet.minKmByBrand) {
+          okDelivery = false;
+        } else {
+          var minKm = distFacet.minKmByBrand[b];
+          if (minKm == null) okDelivery = false;
+          else okDelivery = minKmMatchesAnyDeliveryFilter(minKm, delKeysFacet);
+        }
       }
       if (okSearch && okBrand && okType && okDelivery) {
         match.push(card);
@@ -695,18 +767,35 @@
   }
 
   function updateLifestyleStats() {
+    var dist = computeBrandDistanceBuckets();
     // Omuni Stores
     if (omuniStoresCountEl) {
-      var totalWh = typeof window.WAREHOUSE_TOTAL_COUNT === "number" ? window.WAREHOUSE_TOTAL_COUNT : 0;
-      var byBrand = window.WAREHOUSE_COUNTS_BY_BRAND || {};
       var brandKeys = Object.keys(lifestyleBrandSelected);
+      var deliveryKeys = Object.keys(lifestyleDeliverySelected);
       var wh = 0;
-      if (brandKeys.length === 0) {
-        wh = totalWh;
+      var userLoc = getUserLatLng();
+      var stores = window.WAREHOUSE_STORES || [];
+      if (userLoc && stores.length && dist && dist.minKmByBrand) {
+        for (var si = 0; si < stores.length; si++) {
+          var st = stores[si];
+          if (!st || !st.brand) continue;
+          if (brandKeys.length && !lifestyleBrandSelected[st.brand]) continue;
+          var skm = haversineKm(userLoc.lat, userLoc.lng, Number(st.lat), Number(st.lng));
+          if (deliveryKeys.length === 0 || storeKmMatchesAnyDeliveryFilter(skm, deliveryKeys)) {
+            wh += 1;
+          }
+        }
       } else {
-        brandKeys.forEach(function (b) {
-          wh += byBrand[b] ? Number(byBrand[b]) : 0;
-        });
+        // Fallback to precomputed brand counts when user lat/lng unknown
+        var totalWh = typeof window.WAREHOUSE_TOTAL_COUNT === "number" ? window.WAREHOUSE_TOTAL_COUNT : 0;
+        var byBrand = window.WAREHOUSE_COUNTS_BY_BRAND || {};
+        if (brandKeys.length === 0) {
+          wh = totalWh;
+        } else {
+          brandKeys.forEach(function (b) {
+            wh += byBrand[b] ? Number(byBrand[b]) : 0;
+          });
+        }
       }
       omuniStoresCountEl.textContent = formatInt(wh);
     }
@@ -718,15 +807,27 @@
         typeof window.BRAND_CATEGORY_STYLE_TOTAL === "number" ? window.BRAND_CATEGORY_STYLE_TOTAL : 0;
       var brandKeys2 = Object.keys(lifestyleBrandSelected);
       var typeKeys = Object.keys(lifestyleTypeSelected);
+      var deliveryKeys2 = Object.keys(lifestyleDeliverySelected);
       var styles = 0;
-      if (brandKeys2.length === 0 && typeKeys.length === 0) {
+      if (brandKeys2.length === 0 && typeKeys.length === 0 && deliveryKeys2.length === 0) {
         styles = totalStyles;
       } else {
+        var minKmByBrand = dist && dist.minKmByBrand ? dist.minKmByBrand : null;
         for (var i = 0; i < rows.length; i++) {
           var r = rows[i];
           var okB = brandKeys2.length === 0 || !!lifestyleBrandSelected[r.brand];
           var okT = typeKeys.length === 0 || !!lifestyleTypeSelected[r.type];
-          if (okB && okT) styles += Number(r.count) || 0;
+          var okD = true;
+          if (deliveryKeys2.length > 0) {
+            if (!minKmByBrand) {
+              okD = false;
+            } else {
+              var mk = minKmByBrand[r.brand];
+              if (mk == null) okD = false;
+              else okD = minKmMatchesAnyDeliveryFilter(mk, deliveryKeys2);
+            }
+          }
+          if (okB && okT && okD) styles += Number(r.count) || 0;
         }
       }
       styleCountEl.textContent = formatInt(styles);
