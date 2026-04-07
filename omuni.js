@@ -27,10 +27,10 @@
     omuni: {
       locationLine: "Delivery in 30 minutes",
       heroTitle: "Lifestyle & Apparel, delivered in under 30 mins",
-      heroSub: "Shop 5000+ stores and 50+ brands — apparel delivered fast alongside your grocery basket.",
+      heroSub: "Shop apparel delivered fast alongside your grocery basket.",
       productsNote:
-        "Omuni: 5000+ stores, 50+ apparel brands — fashion in under 30 mins alongside your grocery basket.",
-      apparelMeta: "5000+ stores · 50+ brands",
+        "Omuni: fashion in under 30 mins alongside your grocery basket.",
+      apparelMeta: "",
       promo1Title: "Pharmacy at your doorstep!",
       promo1Sub: "Same-day essentials with fewer stockouts on the Omuni lane.",
       promo2Title: "Fashion & lifestyle via Omuni",

@@ -941,9 +941,6 @@
       var wh = 0;
       var userLoc = getUserLatLng();
       var stores = window.WAREHOUSE_STORES || [];
-      if (!userLoc || (!stores || !stores.length)) {
-        omuniStoresCountEl.textContent = "Set location";
-      }
       if (userLoc && stores.length && dist && dist.minKmByBrand) {
         for (var si = 0; si < stores.length; si++) {
           var st = stores[si];
@@ -966,7 +963,7 @@
           });
         }
       }
-      if (userLoc && stores && stores.length) omuniStoresCountEl.textContent = formatInt(wh);
+      omuniStoresCountEl.textContent = formatInt(wh);
     }
 
     // Style Added
@@ -978,10 +975,6 @@
       var typeKeys = Object.keys(lifestyleTypeSelected);
       var deliveryKeys2 = lifestyleDeliveryBy ? [lifestyleDeliveryBy] : [];
       var styles = 0;
-      var userLocS = getUserLatLng();
-      if (!userLocS) {
-        styleCountEl.textContent = "Set location";
-      }
       if (brandKeys2.length === 0 && typeKeys.length === 0 && deliveryKeys2.length === 0) {
         styles = totalStyles;
       } else {
@@ -1053,7 +1046,7 @@
           }
         }
       }
-      if (userLocS) styleCountEl.textContent = formatInt(Math.round(styles));
+      styleCountEl.textContent = formatInt(Math.round(styles));
     }
   }
 
@@ -1885,6 +1878,34 @@
       });
     }
   }
+
+  // First-time visitors: prompt for location immediately.
+  // If a saved location (pincode/lat/lng) already exists, do nothing.
+  (function autoPromptLocationOnce() {
+    if (!locationModal) return;
+    var loc = getSavedLocation();
+    if (loc && loc.pincode) return;
+    var key = "blinkit_location_prompted_v1";
+    try {
+      if (localStorage.getItem(key) === "true") return;
+      localStorage.setItem(key, "true");
+    } catch (e) {
+      // If storage is blocked, still avoid being too aggressive: only prompt once per page load.
+      if (window.__blinkitLocationPrompted) return;
+      window.__blinkitLocationPrompted = true;
+    }
+
+    // Open modal and trigger geolocation permission prompt (best-effort).
+    openLocation();
+    var detectBtn = document.getElementById("locDetectBtn");
+    if (detectBtn && !detectBtn.disabled) {
+      setTimeout(function () {
+        try {
+          detectBtn.click();
+        } catch (e2) {}
+      }, 250);
+    }
+  })();
 
   renderHeaderLocation();
 
