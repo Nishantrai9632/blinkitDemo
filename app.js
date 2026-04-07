@@ -941,6 +941,9 @@
       var wh = 0;
       var userLoc = getUserLatLng();
       var stores = window.WAREHOUSE_STORES || [];
+      if (!userLoc || (!stores || !stores.length)) {
+        omuniStoresCountEl.textContent = "Set location";
+      }
       if (userLoc && stores.length && dist && dist.minKmByBrand) {
         for (var si = 0; si < stores.length; si++) {
           var st = stores[si];
@@ -963,7 +966,7 @@
           });
         }
       }
-      omuniStoresCountEl.textContent = formatInt(wh);
+      if (userLoc && stores && stores.length) omuniStoresCountEl.textContent = formatInt(wh);
     }
 
     // Style Added
@@ -975,6 +978,10 @@
       var typeKeys = Object.keys(lifestyleTypeSelected);
       var deliveryKeys2 = lifestyleDeliveryBy ? [lifestyleDeliveryBy] : [];
       var styles = 0;
+      var userLocS = getUserLatLng();
+      if (!userLocS) {
+        styleCountEl.textContent = "Set location";
+      }
       if (brandKeys2.length === 0 && typeKeys.length === 0 && deliveryKeys2.length === 0) {
         styles = totalStyles;
       } else {
@@ -1046,7 +1053,7 @@
           }
         }
       }
-      styleCountEl.textContent = formatInt(Math.round(styles));
+      if (userLocS) styleCountEl.textContent = formatInt(Math.round(styles));
     }
   }
 
@@ -1717,11 +1724,15 @@
     if (!line) {
       locationAddressLine.childNodes[0].nodeValue = "Set delivery location ";
       if (locationDeliveryLine) locationDeliveryLine.textContent = "Deliver to";
+      var hint = document.getElementById("lifestyleOnboardingHint");
+      if (hint) hint.hidden = false;
       return;
     }
     // keep the chevron svg at end; replace only leading text node
     locationAddressLine.childNodes[0].nodeValue = line + " ";
     if (locationDeliveryLine) locationDeliveryLine.textContent = "Deliver to";
+    var hint2 = document.getElementById("lifestyleOnboardingHint");
+    if (hint2) hint2.hidden = true;
   }
 
   async function reverseGeocode(lat, lng) {

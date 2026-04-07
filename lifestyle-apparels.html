@@ -21,6 +21,9 @@
           <span class="location__line1" id="locationDeliveryLine">Deliver to</span>
           <span class="location__line2" id="locationAddressLine">Set delivery location <svg class="location__chev" width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
         </button>
+        <p class="lifestyle-onboarding-hint" id="lifestyleOnboardingHint">
+          Start by setting your delivery location to explore stores and styles.
+        </p>
         <button
           type="button"
           class="header__menu-btn"
@@ -99,77 +102,29 @@
   <main class="page-main page-main--lifestyle">
     <section class="network-health" id="networkHealthSection" aria-labelledby="networkHealthHeading">
       <div class="network-health__inner">
-        <header class="network-health__header network-health__header--with-omuni-toggle">
+        <header class="network-health__header">
           <div class="network-health__title-row">
             <h2 id="networkHealthHeading" class="network-health__title">
-              Network Health
-              <span class="network-health__title-hint">(Click on Toggle Button to see Stock from nearby stores)</span>
+              Available Stores &amp; Styles with Omuni
             </h2>
-            <div class="omuni-toggle-wrap omuni-toggle-wrap--solo omuni-toggle-wrap--network-health" id="omuniToggleWrap">
-              <label class="omuni-toggle-label omuni-toggle-label--solo" for="omuniToggle">
-                <span class="omuni-toggle">
-                  <input type="checkbox" id="omuniToggle" class="omuni-toggle__input" aria-label="Enable stock from nearby stores" />
-                  <span class="omuni-toggle__slider" aria-hidden="true"></span>
-                </span>
-              </label>
-            </div>
           </div>
+          <p class="network-health__subtitle">
+            Set a delivery pincode and apply filters to see how many stores and styles are available near you.
+          </p>
         </header>
-        <div class="network-health__panels">
-          <div id="networkHealthPanelFootprint" class="network-health__panel">
-            <div class="network-health__cluster" id="networkHealthClusterOff" data-network-state="off">
-              <p class="network-health__cluster-label">Darkstore only — no nearby brand-store inventory</p>
-              <ul class="network-health__stats">
-                <li class="network-health__stat">
-                  <span class="network-health__stat-value">~2,500</span>
-                  <span class="network-health__stat-label">Darkstores (all India)</span>
-                </li>
-                <li class="network-health__stat">
-                  <span class="network-health__stat-value">~250</span>
-                  <span class="network-health__stat-label">Darkstores (Bangalore)</span>
-                </li>
-                <li class="network-health__stat">
-                  <span class="network-health__stat-value" id="networkHealthInventoryOff">—</span>
-                  <span class="network-health__stat-bracket" id="networkHealthInventoryOffBracket"></span>
-                  <span class="network-health__stat-label">Inventory count (SKUs on this dashboard)</span>
-                </li>
-              </ul>
+
+        <section class="lifestyle-stats lifestyle-stats--in-network-health" aria-label="Catalog stats">
+          <div class="lifestyle-stats__inner">
+            <div class="lifestyle-stats__item" role="status" aria-live="polite">
+              <span class="lifestyle-stats__label">Omuni Stores</span>
+              <span class="lifestyle-stats__value" id="omuniStoresCount">—</span>
             </div>
-            <div class="network-health__cluster" id="networkHealthClusterOn" hidden data-network-state="on">
-              <p class="network-health__cluster-label">Darkstore + brand stores (Stock from Nearby Stores on)</p>
-              <ul class="network-health__stats network-health__stats--three">
-                <li class="network-health__stat">
-                  <span class="network-health__stat-value">~8,500</span>
-                  <span class="network-health__stat-bracket">(~6,000 from stores + ~2,500 from darkstores)</span>
-                  <span class="network-health__stat-label">Total nodes (all India)</span>
-                </li>
-                <li class="network-health__stat">
-                  <span class="network-health__stat-value">~750</span>
-                  <span class="network-health__stat-bracket">(~500 from stores + ~250 from darkstores)</span>
-                  <span class="network-health__stat-label">Total nodes (Bangalore)</span>
-                </li>
-                <li class="network-health__stat">
-                  <span class="network-health__stat-value" id="networkHealthInventoryOn">—</span>
-                  <span class="network-health__stat-bracket" id="networkHealthInventoryOnBracket"></span>
-                  <span class="network-health__stat-label">Network inventory (SKUs on dashboard)</span>
-                </li>
-              </ul>
+            <div class="lifestyle-stats__item" role="status" aria-live="polite">
+              <span class="lifestyle-stats__label">Style Added</span>
+              <span class="lifestyle-stats__value" id="styleCount">—</span>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="lifestyle-stats" aria-label="Catalog stats">
-      <div class="lifestyle-stats__inner">
-        <div class="lifestyle-stats__item" role="status" aria-live="polite">
-          <span class="lifestyle-stats__label">Omuni Stores</span>
-          <span class="lifestyle-stats__value" id="omuniStoresCount">—</span>
-        </div>
-        <div class="lifestyle-stats__item" role="status" aria-live="polite">
-          <span class="lifestyle-stats__label">Style Added</span>
-          <span class="lifestyle-stats__value" id="styleCount">—</span>
-        </div>
+        </section>
       </div>
     </section>
 
@@ -227,7 +182,7 @@
             <button type="button" class="lifestyle-filter-option lifestyle-filter-option--active" role="option" data-brand-filter="all" aria-selected="true">All brands</button>
             <button type="button" class="lifestyle-filter-option" role="option" data-brand-filter="ARROW" aria-selected="false">ARROW</button>
             <button type="button" class="lifestyle-filter-option" role="option" data-brand-filter="BATA" aria-selected="false">BATA</button>
-            <button type="button" class="lifestyle-filter-option" role="option" data-brand-filter="BLACKBERRY" aria-selected="false">BLACKBERRY</button>
+            <button type="button" class="lifestyle-filter-option" role="option" data-brand-filter="BLACKBERRY" aria-selected="false">BLACKBERRYS</button>
             <button type="button" class="lifestyle-filter-option" role="option" data-brand-filter="CALVIN KLEIN" aria-selected="false">CALVIN KLEIN</button>
             <button type="button" class="lifestyle-filter-option" role="option" data-brand-filter="JACK &amp; JONES" aria-selected="false">JACK &amp; JONES</button>
             <button type="button" class="lifestyle-filter-option" role="option" data-brand-filter="ONLY" aria-selected="false">ONLY</button>
@@ -715,10 +670,9 @@
   <script src="pincode-lat-lng.js"></script>
   <script src="brand-category-style-counts.js"></script>
   <script src="lifestyle-catalog.js"></script>
-  <script src="lifestyle-render.js"></script>
+  <script src="lifestyle-render.js?v=local-brand-images-7"></script>
   <script src="blinkit-omuni-sync.js"></script>
   <script src="app.js"></script>
   <script src="omuni.js"></script>
-  <script src="lifestyle-network-health.js"></script>
 </body>
 </html>

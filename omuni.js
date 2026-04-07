@@ -5,7 +5,8 @@
   var STORAGE_KEY = "omuni-enabled";
 
   var state = {
-    isOmuniEnabled: false,
+    // Lifestyle requirement: Omuni is always ON (no user toggle).
+    isOmuniEnabled: true,
   };
 
   var COPY = {
@@ -337,22 +338,8 @@
   }
 
   function init() {
-    try {
-      var saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === "true") state.isOmuniEnabled = true;
-      if (saved === "false") state.isOmuniEnabled = false;
-    } catch (e) {}
-
-    var toggle = $("omuniToggle");
-    if (toggle) {
-      toggle.addEventListener("change", function () {
-        state.isOmuniEnabled = !!toggle.checked;
-        try {
-          localStorage.setItem(STORAGE_KEY, String(state.isOmuniEnabled));
-        } catch (e) {}
-        applyAll();
-      });
-    }
+    // Intentionally ignore persisted toggle state; Omuni stays ON.
+    state.isOmuniEnabled = true;
 
     document.addEventListener("blinkit:cart-updated", refreshCartDeliveryLine);
 
