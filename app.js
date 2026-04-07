@@ -562,8 +562,8 @@
   }
 
   function updateLifestyleFilterPillStates() {
-    var sortVal = lifestyleSortEl ? lifestyleSortEl.value : "relevance";
-    var sortDirty = sortVal !== "relevance";
+    var sortVal = String(lifestyleSortEl ? lifestyleSortEl.value : "relevance").trim();
+    var sortDirty = !!sortVal && sortVal !== "relevance";
     var sortT = document.getElementById("lifestyleTriggerSort");
     if (sortT) {
       sortT.classList.toggle("lifestyle-filter-pill--dirty", sortDirty);
@@ -586,9 +586,22 @@
 
     var dT = document.getElementById("lifestyleTriggerDeliveryBy");
     if (dT) {
-      var delDirty = !!lifestyleDeliveryBy;
+      var delDirty = !!String(lifestyleDeliveryBy || "").trim();
       dT.classList.toggle("lifestyle-filter-pill--dirty", delDirty);
       setLifestylePillSummary("lifestyleTriggerDeliveryBy", delDirty ? labelForLifestyleDeliveryBy(lifestyleDeliveryBy) : "");
+    }
+
+    var clearBtn = document.getElementById("lifestyleClearFilters");
+    if (clearBtn) {
+      // Defensive: keep hidden unless we can positively identify an applied filter.
+      clearBtn.hidden = true;
+      var anyDirty =
+        sortDirty ||
+        brandKeys.length > 0 ||
+        typeKeys.length > 0 ||
+        !!String(lifestyleDeliveryBy || "").trim() ||
+        (lifestyleFiltersRoot && lifestyleFiltersRoot.querySelector(".lifestyle-filter-pill--dirty"));
+      if (anyDirty) clearBtn.hidden = false;
     }
   }
 
@@ -1027,14 +1040,26 @@
     initLifestylePanelSearch("lifestyleSearchType", "lifestylePanelType");
 
     lifestyleFiltersRoot.addEventListener("click", function (e) {
+      var clearBtn = e.target && e.target.closest && e.target.closest("#lifestyleClearFilters");
+      if (clearBtn) {
+        e.preventDefault();
+        closeAllLifestyleDropdowns();
+        resetLifestyleFilters();
+        updateLifestyleStats();
+        applySearchFilter();
+        return;
+      }
+
       var opt = e.target.closest(".lifestyle-filter-option");
       if (opt) {
         e.preventDefault();
         var panel = opt.closest(".lifestyle-filter-panel");
+        var shouldClose = false;
         if (opt.hasAttribute("data-sort-value")) {
           var sv = opt.getAttribute("data-sort-value") || "relevance";
           if (lifestyleSortEl) lifestyleSortEl.value = sv;
           markActiveInPanel(panel, "data-sort-value", sv);
+          shouldClose = true;
         } else if (opt.hasAttribute("data-brand-filter")) {
           var bv = opt.getAttribute("data-brand-filter") || "";
           if (bv === "all") {
@@ -1058,10 +1083,12 @@
           lifestyleDeliveryBy = dv === "all" ? "" : dv;
           window.lifestyleDeliveryBy = lifestyleDeliveryBy;
           markActiveInPanel(panel, "data-delivery-by", dv === "all" ? "all" : dv);
+          shouldClose = true;
         }
         updateLifestyleFilterPillStates();
         updateLifestyleStats();
         applySearchFilter();
+        if (shouldClose) closeAllLifestyleDropdowns();
         return;
       }
 

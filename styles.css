@@ -1040,6 +1040,11 @@ body.omuni-on .cat-tile__meta {
   border: 0;
 }
 
+/* Ensure the HTML `hidden` attribute always hides elements (some class rules set display). */
+[hidden] {
+  display: none !important;
+}
+
 .lifestyle-filters {
   position: relative;
   z-index: 60;
@@ -1092,6 +1097,55 @@ body.omuni-on .cat-tile__meta {
 .lifestyle-filter-dd {
   position: relative;
   flex: 0 0 auto;
+}
+
+.lifestyle-clear-filters {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 0 10px 0 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: rgba(248, 250, 252, 0.9);
+  color: rgba(30, 41, 59, 0.92);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.005em;
+  cursor: pointer;
+  transition: filter 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lifestyle-clear-filters__x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  color: rgba(30, 41, 59, 0.8);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.lifestyle-clear-filters:hover {
+  filter: brightness(0.99);
+  background: #fff;
+  border-color: rgba(100, 116, 139, 0.6);
+}
+
+.lifestyle-clear-filters:active {
+  filter: brightness(0.96);
+}
+
+.lifestyle-clear-filters:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(12, 131, 31, 0.14);
+  border-color: rgba(12, 131, 31, 0.5);
 }
 
 .lifestyle-filter-pill {
