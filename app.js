@@ -1895,16 +1895,33 @@
       window.__blinkitLocationPrompted = true;
     }
 
-    // Open modal and trigger geolocation permission prompt (best-effort).
-    openLocation();
-    var detectBtn = document.getElementById("locDetectBtn");
-    if (detectBtn && !detectBtn.disabled) {
-      setTimeout(function () {
+    // Request browser location directly (no modal).
+    // If unsupported/denied, do nothing — the modal should only open when the user clicks the address tab.
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      async function (pos) {
         try {
-          detectBtn.click();
-        } catch (e2) {}
-      }, 250);
-    }
+          var lat = pos.coords.latitude;
+          var lng = pos.coords.longitude;
+          var r = await reverseGeocode(lat, lng);
+          // Save lat/lng even if pincode lookup fails; we can still use coordinates for distance-based UX.
+          var toSave = { method: "geo", lat: lat, lng: lng, pincode: r && r.pincode ? r.pincode : "", place: r ? r.place : "", city: r ? r.city : "" };
+          setSavedLocation(toSave);
+          renderHeaderLocation();
+          if (gridLifestyle) {
+            updateLifestyleStats();
+            applyLifestyleFacets();
+          }
+        } catch (e2) {
+          // Best-effort only; keep silent on errors.
+        }
+      },
+      function () {
+        // Permission denied/unavailable → keep silent (modal opens only on user click).
+      },
+      { enableHighAccuracy: false, timeout: 12000, maximumAge: 600000 }
+    );
   })();
 
   renderHeaderLocation();
