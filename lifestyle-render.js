@@ -78,6 +78,60 @@
 
   var DEFAULT_IMG = IMG_POOLS.tops[0];
 
+  function normBrandKey(brandRaw) {
+    var b = String(brandRaw || "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .toUpperCase();
+    if (b === "BLACKBERRYS") return "BLACKBERRY";
+    if (b === "SG_SPORTS") return "SG SPORTS";
+    return b;
+  }
+
+  // Per-brand shuffle-bag state so we don't repeat until exhausted.
+  var brandBags = {};
+  function seededShuffle(arr, seedStr) {
+    // Fisher-Yates with deterministic seed (hashStr)
+    var a = arr.slice();
+    var seed = hashStr(seedStr);
+    function rand01() {
+      // xorshift-ish based on seed
+      seed ^= seed << 13;
+      seed ^= seed >>> 17;
+      seed ^= seed << 5;
+      return ((seed >>> 0) % 100000) / 100000;
+    }
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(rand01() * (i + 1));
+      var tmp = a[i];
+      a[i] = a[j];
+      a[j] = tmp;
+    }
+    return a;
+  }
+
+  function nextBrandImage(brandKey, productSeed) {
+    var pools = window.CATALOG_BRAND_IMAGES || {};
+    var key = normBrandKey(brandKey);
+    var pool = pools[key];
+    if (!pool || !pool.length) return "";
+
+    if (!brandBags[key]) {
+      brandBags[key] = { order: seededShuffle(pool, "bag|" + key), idx: 0, cycle: 0, last: "" };
+    }
+    var bag = brandBags[key];
+    if (bag.idx >= bag.order.length) {
+      bag.cycle += 1;
+      // reshuffle each cycle; include last used to avoid starting with the same image
+      bag.order = seededShuffle(pool, "bag|" + key + "|" + bag.cycle + "|" + (bag.last || ""));
+      bag.idx = 0;
+    }
+    var p = bag.order[bag.idx++];
+    bag.last = p;
+    // ensure URL-safe in HTML
+    return encodeURI("./" + p);
+  }
+
   function hashStr(s) {
     // Simple deterministic hash (stable across sessions, no crypto needed).
     var str = String(s || "");
@@ -275,7 +329,7 @@
     var name = escAttr(nameRaw);
     var typeRaw = p.type || "";
     // Derive image from category (type) so imagery stays consistent with filters.
-    // For select brands, force local sample images but rotate through all 5 deterministically.
+    // Prefer brand image pool (manifest) when available, using a per-brand shuffle bag.
     function rotateLocal5(orderedPaths, seed) {
       var s = String(seed || "");
       var base = hashStr(s) % orderedPaths.length;
@@ -456,10 +510,17 @@
     }
 
     var poolKey = poolKeyForType(typeRaw);
-    var local5 = localPathsForBrand(brandUpper, typeRaw, poolKey);
-    var imgDerived = local5
-      ? rotateLocal5(local5, (p.id || "") + "|" + brandUpper + "|" + typeRaw)
-      : pickFrom(IMG_POOLS[poolKey], (p.id || "") + "|" + (p.brand || "") + "|" + typeRaw);
+    var brandImg = nextBrandImage(brandUpper, (p.id || "") + "|" + typeRaw + "|" + catalogIndex);
+    var local5 = null;
+    var imgDerived = "";
+    if (brandImg) {
+      imgDerived = brandImg;
+    } else {
+      local5 = localPathsForBrand(brandUpper, typeRaw, poolKey);
+      imgDerived = local5
+        ? rotateLocal5(local5, (p.id || "") + "|" + brandUpper + "|" + typeRaw)
+        : pickFrom(IMG_POOLS[poolKey], (p.id || "") + "|" + (p.brand || "") + "|" + typeRaw);
+    }
     var img = escAttr(imgDerived);
     var off = p.off;
     var gender = escAttr(p.gender || "");
@@ -576,29 +637,31 @@
     for (var i = 0; i < items.length; i++) parts[i] = buildCard(items[i], i);
     grid.innerHTML = parts.join("");
 
-    // Reduce “redundant” look: ensure top 100 tiles use distinct images when possible.
-    // We do this after render so we can overwrite src safely without changing catalog data.
-    var used = {};
-    var cards = grid.querySelectorAll(".product-card");
-    var topN = Math.min(100, cards.length);
-    for (var ti = 0; ti < topN; ti++) {
-      var card = cards[ti];
-      var typ = card.getAttribute("data-type") || "";
-      var brand = card.getAttribute("data-brand") || "";
-      var pid = card.getAttribute("data-id") || "";
-      var poolKey = poolKeyForType(typ);
-      var imgUrl = "";
-      var bUpper = String(brand || "").toUpperCase();
-      var local5b = localPathsForBrand(bUpper, typ, poolKey);
-      if (local5b) {
-        imgUrl = rotateLocal5(local5b, pid + "|" + bUpper + "|" + typ + "|" + ti);
-      } else {
-        var pool = IMG_POOLS[poolKey];
-        imgUrl = pickUniqueFrom(pool, pid + "|" + brand + "|" + typ + "|" + ti, used);
+    // When we don't have brand image pools, reduce “redundant” look on Unsplash by ensuring
+    // top 100 tiles use distinct images. Brand image pools already avoid repetition via shuffle-bag.
+    if (!window.CATALOG_BRAND_IMAGES) {
+      var used = {};
+      var cards = grid.querySelectorAll(".product-card");
+      var topN = Math.min(100, cards.length);
+      for (var ti = 0; ti < topN; ti++) {
+        var card = cards[ti];
+        var typ = card.getAttribute("data-type") || "";
+        var brand = card.getAttribute("data-brand") || "";
+        var pid = card.getAttribute("data-id") || "";
+        var poolKey = poolKeyForType(typ);
+        var imgUrl = "";
+        var bUpper = String(brand || "").toUpperCase();
+        var local5b = localPathsForBrand(bUpper, typ, poolKey);
+        if (local5b) {
+          imgUrl = rotateLocal5(local5b, pid + "|" + bUpper + "|" + typ + "|" + ti);
+        } else {
+          var pool = IMG_POOLS[poolKey];
+          imgUrl = pickUniqueFrom(pool, pid + "|" + brand + "|" + typ + "|" + ti, used);
+        }
+        var imgEl = card.querySelector("img.product-card__photo");
+        if (imgEl) imgEl.src = imgUrl;
+        card.setAttribute("data-product-img", imgUrl);
       }
-      var imgEl = card.querySelector("img.product-card__photo");
-      if (imgEl) imgEl.src = imgUrl;
-      card.setAttribute("data-product-img", imgUrl);
     }
 
     // Ensure every card has a valid image even if a remote URL fails.
