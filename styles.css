@@ -3001,6 +3001,13 @@ body.stores-modal-open {
   touch-action: pan-y;
 }
 
+/* Mobile filter dropdowns: lock background scroll while open (prevents drift/misalignment on Android/iOS). */
+body.lifestyle-dd-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
 @media (max-width: 900px) {
   .header__row--top {
     grid-template-columns: 1fr;

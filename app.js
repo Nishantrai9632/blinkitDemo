@@ -548,6 +548,13 @@
     lifestyleFiltersRoot.querySelectorAll('[id^="lifestyleTrigger"]').forEach(function (t) {
       t.setAttribute("aria-expanded", "false");
     });
+    // Release background scroll lock when all dropdowns close.
+    try {
+      document.body.classList.remove("lifestyle-dd-open");
+    } catch (e) {}
+    try {
+      if (window.__lifestyleDdUnlockScroll) window.__lifestyleDdUnlockScroll();
+    } catch (e2) {}
   }
 
   function resetLifestylePanelPosition(panel) {
@@ -1614,6 +1621,67 @@
   }
 
   if (lifestyleFiltersRoot) {
+    // Scroll lock for filter dropdowns (mobile). Prevents page scroll while dropdown open, which
+    // otherwise causes drift/misalignment on Android with keyboard + dynamic viewport changes.
+    (function initLifestyleDropdownScrollLock() {
+      var scrollY = 0;
+      var touchGuardOn = false;
+
+      function lock() {
+        try {
+          scrollY = window.scrollY || window.pageYOffset || 0;
+          document.body.style.position = "fixed";
+          document.body.style.top = "-" + scrollY + "px";
+          document.body.style.left = "0";
+          document.body.style.right = "0";
+          document.body.style.width = "100%";
+        } catch (e) {}
+      }
+
+      function unlock() {
+        try {
+          document.body.style.position = "";
+          document.body.style.top = "";
+          document.body.style.left = "";
+          document.body.style.right = "";
+          document.body.style.width = "";
+          window.scrollTo(0, scrollY || 0);
+        } catch (e) {}
+      }
+
+      function touchMoveGuard(e) {
+        if (!document.body.classList.contains("lifestyle-dd-open")) return;
+        // Allow scrolling inside the open panel only.
+        var inside = e.target && e.target.closest ? e.target.closest(".lifestyle-filter-panel") : null;
+        if (!inside) e.preventDefault();
+      }
+
+      function enableTouchGuard() {
+        if (touchGuardOn) return;
+        touchGuardOn = true;
+        document.addEventListener("touchmove", touchMoveGuard, { passive: false });
+      }
+
+      function disableTouchGuard() {
+        if (!touchGuardOn) return;
+        touchGuardOn = false;
+        try {
+          document.removeEventListener("touchmove", touchMoveGuard, { passive: false });
+        } catch (e) {
+          document.removeEventListener("touchmove", touchMoveGuard);
+        }
+      }
+
+      window.__lifestyleDdLockScroll = function () {
+        lock();
+        enableTouchGuard();
+      };
+      window.__lifestyleDdUnlockScroll = function () {
+        disableTouchGuard();
+        unlock();
+      };
+    })();
+
     // Ensure multi-select panels reflect initial "All" state.
     syncMultiSelectPanel(document.getElementById("lifestylePanelBrand"), "data-brand-filter", lifestyleBrandSelected);
     syncMultiSelectPanel(document.getElementById("lifestylePanelType"), "data-type-filter", lifestyleTypeSelected);
@@ -1693,6 +1761,11 @@
           p.hidden = false;
           trigger.setAttribute("aria-expanded", "true");
           positionLifestylePanel(trigger, p);
+          // Lock background scroll while a dropdown is open (mobile UX).
+          try {
+            document.body.classList.add("lifestyle-dd-open");
+            if (window.__lifestyleDdLockScroll) window.__lifestyleDdLockScroll();
+          } catch (eLock) {}
           var searchInput = p.querySelector(".lifestyle-filter-search__input");
           if (searchInput) {
             // Important for mobile UX (Android/iOS): don't auto-open the keyboard.
