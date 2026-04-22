@@ -2987,6 +2987,20 @@ body.checkout-open {
   overflow: hidden;
 }
 
+/* Stores list modal: lock page scroll when open */
+body.stores-modal-open {
+  overflow: hidden;
+  /* iOS: prevent rubber-band + background scroll chaining */
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.stores-modal__body {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
 @media (max-width: 900px) {
   .header__row--top {
     grid-template-columns: 1fr;

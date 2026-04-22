@@ -1031,14 +1031,71 @@
     var metaEl = document.getElementById("storesModalMeta");
     var hintEl = document.getElementById("storesModalHint");
 
+    // Scroll lock (especially important on iOS where overflow:hidden on body is not sufficient).
+    var _storesModalScrollY = 0;
+    var _storesModalTouchGuardOn = false;
+    function lockPageScrollForStoresModal() {
+      try {
+        _storesModalScrollY = window.scrollY || window.pageYOffset || 0;
+        document.body.style.position = "fixed";
+        document.body.style.top = "-" + _storesModalScrollY + "px";
+        document.body.style.left = "0";
+        document.body.style.right = "0";
+        document.body.style.width = "100%";
+      } catch (e) {}
+    }
+    function unlockPageScrollForStoresModal() {
+      try {
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.left = "";
+        document.body.style.right = "";
+        document.body.style.width = "";
+        window.scrollTo(0, _storesModalScrollY || 0);
+      } catch (e) {}
+    }
+
+    function touchMoveGuard(e) {
+      if (!document.body.classList.contains("stores-modal-open")) return;
+      // Allow scrolling *inside* the modal body only.
+      var bodyEl = document.getElementById("storesListModal");
+      if (!bodyEl) {
+        e.preventDefault();
+        return;
+      }
+      var inside = e.target && e.target.closest ? e.target.closest(".stores-modal__body") : null;
+      if (!inside) {
+        e.preventDefault();
+      }
+    }
+    function enableTouchGuard() {
+      if (_storesModalTouchGuardOn) return;
+      _storesModalTouchGuardOn = true;
+      // iOS needs {passive:false} to allow preventDefault.
+      document.addEventListener("touchmove", touchMoveGuard, { passive: false });
+    }
+    function disableTouchGuard() {
+      if (!_storesModalTouchGuardOn) return;
+      _storesModalTouchGuardOn = false;
+      try {
+        document.removeEventListener("touchmove", touchMoveGuard, { passive: false });
+      } catch (e) {
+        document.removeEventListener("touchmove", touchMoveGuard);
+      }
+    }
+
     function close() {
       modal.hidden = true;
       document.body.classList.remove("stores-modal-open");
+      disableTouchGuard();
+      unlockPageScrollForStoresModal();
     }
 
     function openWithBrand(brandOverride, productKey) {
       modal.hidden = false;
       document.body.classList.add("stores-modal-open");
+      lockPageScrollForStoresModal();
+      enableTouchGuard();
       // Reset quickly
       if (listEl) listEl.innerHTML = '<div class="stores-modal__empty">Loading store list…</div>';
       if (metaEl) metaEl.textContent = "";
