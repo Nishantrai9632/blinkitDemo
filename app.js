@@ -567,19 +567,26 @@
     if (window.innerWidth > 900) return;
 
     var rect = trigger.getBoundingClientRect();
-    var vw = Math.max(320, window.innerWidth || 0);
+    // iOS Safari: `getBoundingClientRect` is relative to the visual viewport, but `position: fixed`
+    // is anchored to the layout viewport. When the URL bar collapses or the keyboard is open,
+    // the visual viewport is offset (visualViewport.offsetTop/Left). Account for that so the
+    // dropdown stays attached while scrolling.
+    var vv = window.visualViewport || null;
+    var offTop = vv && typeof vv.offsetTop === "number" ? vv.offsetTop : 0;
+    var offLeft = vv && typeof vv.offsetLeft === "number" ? vv.offsetLeft : 0;
+    var vw = Math.max(320, (vv && vv.width ? vv.width : window.innerWidth) || 0);
     var margin = 12;
     var maxW = vw - margin * 2;
 
     panel.style.position = "fixed";
-    panel.style.top = Math.round(rect.bottom + 8) + "px";
+    panel.style.top = Math.round(rect.bottom + 8 + offTop) + "px";
     panel.style.maxHeight = "min(60vh, 420px)";
     panel.style.maxWidth = maxW + "px";
     panel.style.width = "";
 
     // Measure after applying fixed so we can clamp left.
     var pw = panel.getBoundingClientRect().width || 240;
-    var left = rect.left;
+    var left = rect.left + offLeft;
     if (left + pw > vw - margin) left = vw - margin - pw;
     if (left < margin) left = margin;
     panel.style.left = Math.round(left) + "px";
@@ -1653,10 +1660,35 @@
       var dd = openTrigger.closest(".lifestyle-filter-dd");
       var p = dd ? dd.querySelector(".lifestyle-filter-panel") : null;
       if (!p || p.hidden) return;
-      positionLifestylePanel(openTrigger, p);
+      // Avoid layout thrash on iOS; re-position on next frame.
+      try {
+        window.requestAnimationFrame(function () {
+          positionLifestylePanel(openTrigger, p);
+        });
+      } catch (e) {
+        positionLifestylePanel(openTrigger, p);
+      }
     },
     { passive: true }
   );
+
+  // iOS: when the keyboard opens/closes or the URL bar collapses, the visual viewport changes
+  // without a window resize/scroll in the way desktop browsers report it.
+  (function wireVisualViewportReposition() {
+    var vv = window.visualViewport;
+    if (!vv || !vv.addEventListener) return;
+    function repositionOpenPanel() {
+      if (!lifestyleFiltersRoot) return;
+      var openTrigger = lifestyleFiltersRoot.querySelector('[id^="lifestyleTrigger"][aria-expanded="true"]');
+      if (!openTrigger) return;
+      var dd = openTrigger.closest(".lifestyle-filter-dd");
+      var p = dd ? dd.querySelector(".lifestyle-filter-panel") : null;
+      if (!p || p.hidden) return;
+      positionLifestylePanel(openTrigger, p);
+    }
+    vv.addEventListener("resize", repositionOpenPanel, { passive: true });
+    vv.addEventListener("scroll", repositionOpenPanel, { passive: true });
+  })();
   if (lifestyleSortEl) {
     lifestyleSortEl.addEventListener("change", function () {
       var v = lifestyleSortEl.value;
