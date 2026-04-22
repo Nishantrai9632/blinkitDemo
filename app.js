@@ -1652,10 +1652,20 @@
     // Scroll lock for filter dropdowns (mobile). Prevents page scroll while dropdown open, which
     // otherwise causes drift/misalignment on Android with keyboard + dynamic viewport changes.
     (function initLifestyleDropdownScrollLock() {
+      var isIOS = false;
+      try {
+        var ua = navigator.userAgent || "";
+        isIOS = /iPad|iPhone|iPod/i.test(ua);
+      } catch (e0) {
+        isIOS = false;
+      }
       var scrollY = 0;
       var touchGuardOn = false;
 
       function lock() {
+        // iOS needs body position:fixed to truly lock background scroll.
+        // Android/WebView can get "layout jump" when the keyboard opens if we do this.
+        if (!isIOS) return;
         try {
           scrollY = window.scrollY || window.pageYOffset || 0;
           document.body.style.position = "fixed";
@@ -1667,6 +1677,7 @@
       }
 
       function unlock() {
+        if (!isIOS) return;
         try {
           document.body.style.position = "";
           document.body.style.top = "";
@@ -1687,12 +1698,15 @@
       function enableTouchGuard() {
         if (touchGuardOn) return;
         touchGuardOn = true;
-        document.addEventListener("touchmove", touchMoveGuard, { passive: false });
+        if (isIOS) {
+          document.addEventListener("touchmove", touchMoveGuard, { passive: false });
+        }
       }
 
       function disableTouchGuard() {
         if (!touchGuardOn) return;
         touchGuardOn = false;
+        if (!isIOS) return;
         try {
           document.removeEventListener("touchmove", touchMoveGuard, { passive: false });
         } catch (e) {
