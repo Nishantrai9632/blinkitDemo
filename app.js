@@ -1665,25 +1665,24 @@
 
       function touchMoveGuard(e) {
         if (!document.body.classList.contains("lifestyle-dd-open")) return;
-        // Allow scrolling inside the open panel only.
         var inside = e.target && e.target.closest ? e.target.closest(".lifestyle-filter-panel") : null;
-        if (!inside) e.preventDefault();
+        if (!inside) {
+          closeAllLifestyleDropdowns();
+        }
       }
 
       function enableTouchGuard() {
         if (touchGuardOn) return;
         touchGuardOn = true;
-        document.addEventListener("touchmove", touchMoveGuard, { passive: false });
+        document.addEventListener("touchmove", touchMoveGuard, { passive: true });
+        document.addEventListener("wheel", touchMoveGuard, { passive: true });
       }
 
       function disableTouchGuard() {
         if (!touchGuardOn) return;
         touchGuardOn = false;
-        try {
-          document.removeEventListener("touchmove", touchMoveGuard, { passive: false });
-        } catch (e) {
-          document.removeEventListener("touchmove", touchMoveGuard);
-        }
+        document.removeEventListener("touchmove", touchMoveGuard);
+        document.removeEventListener("wheel", touchMoveGuard);
       }
 
       window.__lifestyleDdLockScroll = function () {
